@@ -1,0 +1,75 @@
+{
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+  "editor.occurrencesHighlight": "off",
+  "editor.formatOnSave": true,
+  "explorer.confirmDragAndDrop": false,
+  "editor.parameterHints.enabled": false,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 2000,
+  "vim.cursorStylePerMode.insert": "line",
+  "vim.easymotion": true,
+  "vim.incsearch": true,
+  "vim.useSystemClipboard": true,
+  "vim.useCtrlKeys": true,
+  "vim.hlsearch": true,
+  "vim.cursorStylePerMode.normal": "block",
+  "editor.cursorBlinking": "solid",
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["f"],
+      "after": ["<leader>", "<leader>", "f"]
+    },
+    {
+      "before": ["F"],
+      "after": ["<leader>", "<leader>", "F"]
+    },
+    {
+      "before": [" ", "s"],
+      "after": ["<leader>", "<leader>", "2", "s"]
+    },
+    {
+      "before": ["<leader>", "d"],
+      "after": ["d", "d"]
+    },
+    {
+      "before": ["<C-n>"],
+      "commands": [":nohl"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["lineBreakInsert"],
+      "silent": true
+    }
+  ],
+  "vim.leader": "<space>",
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false
+  },
+  // To improve performance
+  "extensions.experimental.affinity": {
+    "vscodevim.vim": 1
+  },
+  "prettier.printWidth": 100,
+  "chat.disableAIFeatures": true,
+  "editor.fontSize": 16,
+  "[python]": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.defaultColorDecorators": "never",
+    "editor.formatOnType": true,
+    "editor.wordBasedSuggestions": "off"
+  },
+  "python.analysis.typeCheckingMode": "standard",
+  "jupyter.askForKernelRestart": false
+}
