@@ -1,7 +1,17 @@
 {
+  "workbench.colorCustomizations": {
+    "editorCursor.foreground": "#e427c1"
+    // "editorCursor.background": "#e427c1"
+  },
+  "json.format.keepLines": true,
+
+  "editor.defaultColorDecorators": "auto",
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "editor.occurrencesHighlight": "off",
   "editor.formatOnSave": true,
@@ -11,13 +21,16 @@
   "git.confirmSync": false,
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 2000,
+  "vim.camelCaseMotion.enable": false,
   "vim.cursorStylePerMode.insert": "line",
   "vim.easymotion": true,
+  "vim.sneak": false,
   "vim.incsearch": true,
   "vim.useSystemClipboard": true,
   "vim.useCtrlKeys": true,
   "vim.hlsearch": true,
   "vim.cursorStylePerMode.normal": "block",
+  "vim.leader": "<space>",
   "editor.cursorBlinking": "solid",
   "vim.insertModeKeyBindings": [
     {
@@ -52,10 +65,11 @@
       "silent": true
     }
   ],
-  "vim.leader": "<space>",
   "vim.handleKeys": {
     "<C-a>": false,
-    "<C-f>": false
+    "<C-f>": false,
+    "<C-p>": false,
+    "<C-i>": false
   },
   // To improve performance
   "extensions.experimental.affinity": {
@@ -65,11 +79,16 @@
   "chat.disableAIFeatures": true,
   "editor.fontSize": 16,
   "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "diffEditor.ignoreTrimWhitespace": false,
     "editor.defaultColorDecorators": "never",
     "editor.formatOnType": true,
+    "editor.formatOnSave": true,
     "editor.wordBasedSuggestions": "off"
   },
   "python.analysis.typeCheckingMode": "standard",
-  "jupyter.askForKernelRestart": false
+  "jupyter.askForKernelRestart": false,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
