@@ -47,18 +47,22 @@
   (setq display-fill-column-indicator-column 80)
   (setq blink-matching-paren 'jump
         blink-matching-delay .2)
+  (setq auto-save-visited-interval 60)
+  (setq auto-save-no-message t)
 
   :config
   ;;(add-to-list 'default-frame-alist '(height . 120))
   (add-to-list 'default-frame-alist '(width . 95))
   (blink-cursor-mode 0)
   (global-hl-line-mode -1)
+  (auto-save-visited-mode 1)
+  
   (menu-bar-mode 1)
   (tool-bar-mode -1)
   (show-paren-mode t)
   (global-eldoc-mode -1)
   (electric-pair-mode 1)
-  (electric-indent-mode -1)
+  (electric-indent-mode 1)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)
   (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
@@ -71,6 +75,7 @@
 				;; Setting this to 't' creates syntax errors in modern Python.
 				(setq indent-tabs-mode nil) 
 				(setq python-indent 4) 
+				(setq python-indent-offset 4)
 				(setq tab-width 4)))
 
   (defun my-python-run ()
@@ -151,14 +156,13 @@
 (use-package company
   :diminish
   :init
-  (setq company-text-icons-add-background t
-        company-tooltip-idle-delay 10
-        company-tooltip-minimum 4
-        company-tooltip-minimum-width 40
-        company-idle-delay .3
-        company-show-numbers t
-        company-echo-delay 0
-        company-format-margin-function #'company-text-icons-margin)
+  (setq company-tooltip-idle-delay 10
+	company-tooltip-minimum 4
+	company-tooltip-minimum-width 40
+	company-idle-delay .3
+	company-show-numbers t
+	company-echo-delay 0
+	company-format-margin-function #'company-text-icons-margin)
   :config
   (global-company-mode))
 
