@@ -1,4 +1,3 @@
-
 ;;; ==============================
 ;;; 1. PACKAGE MANAGER BOOTSTRAP
 ;;; ==============================
@@ -18,6 +17,11 @@
 ;; Automatically download packages if they are missing
 (setq use-package-always-ensure t)
 
+(use-package exec-path-from-shell
+  :ensure t
+  :if (memq window-system '(mac ns))
+  :config
+  (exec-path-from-shell-initialize))
 
 ;;; ==============================
 ;;; 2. GENERAL EMACS SETTINGS
@@ -65,7 +69,6 @@
   (electric-indent-mode 1)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)
-  (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode)
   
   ;; Hooks
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
@@ -111,6 +114,7 @@
 ;;; ==============================
 (use-package evil
   :init
+  (setq evil-want-keybinding nil)
   ;; (setq evil-emacs-state-cursor '("black" box)
   ;;       evil-normal-state-cursor '("purple" box)
   ;;       evil-visual-state-cursor '("orange" box)
@@ -124,6 +128,10 @@
   (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
   (evil-define-key 'normal org-mode-map (kbd "TAB") #'org-cycle))
 
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init '(magit dired ibuffer)))
 
 ;;; ==============================
 ;;; 5. UI & MODELINE
@@ -135,7 +143,7 @@
         telephone-line-secondary-left-separator 'telephone-line-identity-hollow-left
         telephone-line-primary-right-separator 'telephone-line-identity-right
         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-right)
-  (setq telephone-line-height 24) ;; Optional: Makes the bar slightly thinner/sleeker
+  (setq telephone-line-height 20) ;; Optional: Makes the bar slightly thinner/sleeker
 
   (setq telephone-line-lhs
         '((evil   . (telephone-line-evil-tag-segment))
@@ -210,6 +218,14 @@
 ;;; ==============================
 ;;; 8. UTILITIES
 ;;; ==============================
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
+
 (use-package tramp
   :ensure nil
   :config
@@ -220,4 +236,14 @@
   :config
   (global-anzu-mode +1))
 
+(use-package aggressive-indent
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook #'aggressive-indent-mode))
+
 (use-package diminish)
+
+(add-to-list 'load-path "~/.emacs.d/lisp/")
+(require 'my-python)
+
+
