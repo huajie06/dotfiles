@@ -27,7 +27,6 @@
 ;;; 2. GENERAL EMACS SETTINGS
 ;;; ==============================
 (use-package emacs
-  :ensure nil ;; 'emacs' is built-in, so don't try to download it
   :init
   ;; Backup settings
   (setq backup-directory-alist `(("." . "~/.emacs.d/.saves")))
@@ -35,7 +34,7 @@
         kept-new-versions 4   ;; Fixed typo: was kept-new-version
         kept-old-versions 2   ;; Fixed typo: was kept-old-version
         version-control t)
-  
+
   ;; Save/UI settings
   (setq auto-save-default nil)
   (setq auto-save-interval 10000)
@@ -45,7 +44,7 @@
   (setq inhibit-splash-screen t)
   (setq scroll-conservatively 101)
   (setq org-confirm-babel-evaluate nil)
-  
+
   ;; Visuals
   (setq-default fill-column 80)
   (setq display-fill-column-indicator-column 80)
@@ -55,12 +54,11 @@
   (setq auto-save-no-message t)
 
   :config
-  ;;(add-to-list 'default-frame-alist '(height . 120))
   (add-to-list 'default-frame-alist '(width . 95))
   (blink-cursor-mode 0)
   (global-hl-line-mode -1)
   (auto-save-visited-mode 1)
-  
+
   (menu-bar-mode 1)
   (tool-bar-mode -1)
   (show-paren-mode t)
@@ -69,44 +67,94 @@
   (electric-indent-mode 1)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)
-  
-  ;; Hooks
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-  (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
-  
-;;; ==============================
-;; python setup
-;;; ==============================
 
+  ;; Hooks
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
+
+;;; ==============================
+;;; python setup
+;;; ==============================
+;; 1. Grammar Management (Keep this as is, but removed the :mode line)
+(use-package treesit
+  :ensure nil
+  :config
+  (setq treesit-language-source-alist
+        '((python "https://github.com/tree-sitter/tree-sitter-python")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (json "https://github.com/tree-sitter/tree-sitter-json"))))
+
+;; 2. Python Configuration
 (use-package python
   :ensure nil
-  :mode ("\\.py\\'" . python-ts-mode)
   :custom
   (python-indent-offset 4)
   (indent-tabs-mode nil)
-  :bind (:map python-base-mode-map  
+
+  ;; BEST PRACTICE: Use remapping instead of hardcoding file extensions.
+  ;; This tells Emacs: "Whenever you would load python-mode, load python-ts-mode instead."
+  ;; if i cannot compile python-grammar, comment off init
+  :init
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+
+  ;; Bind keys to the SHARED map so they work in both modes
+  :bind (:map python-base-mode-map
               ("<f5>" . my-python-run))
   :config
   (defun my-python-run ()
-    "Save and run the current python file (clean version)."
+    "Save and run the current python file."
     (interactive)
-    (when (derived-mode-p 'python-mode)
+    ;; FIX: Check 'python-base-mode' (the parent), NOT 'python-mode'.
+    ;; 'python-ts-mode' does NOT inherit from 'python-mode', so your old check failed here.
+    (when (derived-mode-p 'python-base-mode)
       (save-buffer)
       (compile (format "python3 %s" (shell-quote-argument (buffer-file-name))))))
+
+  ;; Enable electric indent (newline auto-indents)
   (electric-indent-local-mode 1))
 
 ;;; ==============================
 ;;; 3. UNDO SYSTEM
 ;;; ==============================
-;; Load this before Evil so Evil can link into it
-(use-package undo-tree
-  :diminish
-  :init
-  (setq undo-tree-auto-save-history t)
-  (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
-  :config
-  (global-undo-tree-mode))
 
+;; 1. The Undo Backend (The "Engine")
+;; This enables the "u" and "C-r" keys in Evil to work without undo-tree.
+(use-package undo-fu
+  :ensure t
+  :config
+  ;; CRITICAL: Tell Evil to use undo-fu instead of undo-tree
+  (setq evil-undo-system 'undo-fu))
+
+;; 2. Persistent History (The "Save File")
+;; This replaces the "history file" part of undo-tree.
+;; It is much more robust and rarely corrupts files.
+(use-package undo-fu-session
+  :ensure t
+  :init
+  (undo-fu-session-global-mode)
+  :config
+  (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'")))
+
+;; 3. The Visualizer (The UI)
+;; This replaces the "C-x u" visual tree.
+(use-package vundo
+  :ensure t
+  :bind ("C-x u" . vundo)
+  :config
+  ;; Optional: Use nicer symbols for the tree
+  (setq vundo-glyph-alist vundo-unicode-symbols)
+
+  ;; Make vundo feel like Vim!
+  ;; By default, vundo uses f/b/n/p. Let's use h/j/k/l.
+  (with-eval-after-load 'vundo
+    (define-key vundo-mode-map (kbd "l") #'vundo-forward)
+    (define-key vundo-mode-map (kbd "h") #'vundo-backward)
+    (define-key vundo-mode-map (kbd "j") #'vundo-next)
+    (define-key vundo-mode-map (kbd "k") #'vundo-previous)
+    (define-key vundo-mode-map (kbd "q") #'vundo-quit)))
 
 ;;; ==============================
 ;;; 4. EVIL MODE (VIM EMULATION)
@@ -120,8 +168,10 @@
   ;;       evil-insert-state-cursor '("magenta" bar))
   :config
   (evil-mode 1)
-  (evil-set-undo-system 'undo-tree)
-  
+  ;; Add this to your general Evil config
+  (define-key evil-motion-state-map (kbd "/") 'consult-line)
+  (define-key evil-normal-state-map (kbd "U") 'vundo)
+
   ;; Keybindings
   (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char-2)
   (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
@@ -142,7 +192,7 @@
         telephone-line-secondary-left-separator 'telephone-line-identity-hollow-left
         telephone-line-primary-right-separator 'telephone-line-identity-right
         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-right)
-  (setq telephone-line-height 20) ;; Optional: Makes the bar slightly thinner/sleeker
+  (setq telephone-line-height 20)
 
   (setq telephone-line-lhs
         '((evil   . (telephone-line-evil-tag-segment))
@@ -158,86 +208,133 @@
   (telephone-line-mode 1))
 
 ;;; ==============================
-;;; 6. AUTOCOMPLETE (COMPANY)
+;;; 6. AUTOCOMPLETE
 ;;; ==============================
-(use-package company
+;; 1. CORFU (The UI - replaces Company)
+(use-package corfu
   :ensure t
-  :diminish company-mode  ; Note: requires 'diminish' package installed
+  :custom
+  (corfu-auto t)                 ; Enable auto-completion
+  (corfu-auto-delay 0.2)         ; Delay before popup appears
+  (corfu-auto-prefix 2)          ; Show completion after 2 characters (tweak to 3 if too noisy)
+  (corfu-cycle t)                ; Allow cycling through candidates
+  (corfu-quit-no-match 'separator) ; Don't quit if you type something that doesn't match
   :init
-  (setq company-tooltip-idle-delay 10
-        company-tooltip-minimum 4
-        company-tooltip-minimum-width 40
-        company-idle-delay 0.3
-        company-show-numbers t
-        company-echo-delay 0
-        ;; Correct way to set the margin function for icons
-        company-format-margin-function #'company-text-icons-margin)
-  :config
-  ;; Add the deduplication transformer
-  (add-to-list 'company-transformers #'delete-dups)
-  
-  (global-company-mode))
+  (global-corfu-mode)
+  :bind (:map corfu-map
+              ("RET" . nil)                 ; Enter = Newline (don't complete)
+              ("TAB" . corfu-insert)        ; Tab = Complete
+              ("<tab>" . corfu-insert)
+              ("C-j" . corfu-next)          ; Vim-style down
+              ("C-k" . corfu-previous)))    ; Vim-style up
+
+;; 2. CAPE (The Backends - "Dumb" completion sources)
+;; Since you don't use LSP, this is CRITICAL.
+;; It provides the "words in buffer" and "file path" completion.
+(use-package cape
+  :ensure t
+  :init
+  ;; Add useful "dumb" backends to the completion list
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev) ; Words in all buffers
+  (add-to-list 'completion-at-point-functions #'cape-file)    ; File paths
+  (add-to-list 'completion-at-point-functions #'cape-keyword) ; Language keywords
+
+  ;; Make the sorting silent and fast
+  (setq cape-dabbrev-check-other-buffers t))
+
 
 ;;; ==============================
-;;; 7. NAVIGATION & SEARCH (IVY)
+;;; 7. NAVIGATION & SEARCH (MODERN STACK)
 ;;; ==============================
+;; 1. PERSISTENCE (Crucial for sorting M-x by usage)
+(use-package savehist
+  :ensure nil ; Built-in
+  :init
+  (savehist-mode))
+
 (use-package recentf
+  :ensure nil ; Built-in
   :init
   (setq recentf-max-saved-items 150)
   :config
   (recentf-mode 1)
   (run-at-time nil (* 25 60) 'recentf-save-list))
 
-(use-package ivy
-  :diminish
+;; 2. VERTICO (The UI)
+(use-package vertico
+  :ensure t
   :init
-  (setq ivy-count-format "(%d/%d) ")
-  (setq ivy-height 15)
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t)
+  (vertico-mode)
   :config
-  (ivy-mode 1) ;; Ensure ivy-mode is actually on
-  (global-set-key (kbd "C-c C-r") 'ivy-resume)
-  (global-set-key (kbd "C-x b") 'ivy-switch-buffer))
+  (setq vertico-count 15)
+  (setq vertico-resize t)
+  :bind (:map vertico-map
+              ("C-j" . vertico-next)
+              ("C-k" . vertico-previous)
+              ("C-f" . vertico-exit)
+              :map minibuffer-local-map
+              ("M-h" . backward-kill-word)))
 
-(use-package counsel
-  :diminish
-  :after ivy
+;; Restore "Resume" functionality
+(use-package vertico-repeat
+  :ensure nil ; Part of Vertico, do not download
+  :after vertico
+  :bind ("C-c C-r" . vertico-repeat))
+
+;; 3. ORDERLESS (The fuzzy matching)
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+;; 4. MARGINALIA (Rich info in the list)
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode))
+
+;; 5. CONSULT (The Commands)
+(use-package consult
+  :ensure t
+  :bind (("C-s" . consult-line)           ; Swiper replacement
+         ("C-x b" . consult-buffer)       ; Switch buffer (includes recentf)
+         ("C-x C-r" . consult-recent-file); Recent files specific
+         ("M-y" . consult-yank-pop)       ; Kill-ring history
+         ("M-g g" . consult-goto-line)    ; Goto line
+         ("C-c r" . consult-ripgrep)      ; Recursive grep
+         :map minibuffer-local-map
+         ("C-r" . consult-history))       ; Minibuffer history
   :config
-  (counsel-mode 1)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-  (global-set-key (kbd "C-x C-r") 'counsel-recentf) ;; Moved from recentf block to here
-  (global-set-key (kbd "M-x") 'counsel-M-x)
-  (global-set-key (kbd "C-h f") 'counsel-describe-function)
-  (global-set-key (kbd "C-h v") 'counsel-describe-variable)
-  (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
+  (setq consult-preview-key 'any))
 
-(use-package swiper
-  :diminish
-  :after ivy
-  :config
-  (global-set-key "\C-s" 'swiper))
+;; 6. EMBARK (Actions)
+(use-package embark
+  :ensure t
+  :bind
+  (("C-." . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings)))
 
+(use-package embark-consult
+  :ensure t
+  :after (embark consult)
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
-;;; ==============================
-;;; 8. UTILITIES
-;;; ==============================
-
-
+;; 7. IBUFFER (Management) - Keep your existing setup!
 (use-package ibuffer
   :ensure nil
   :bind ("C-x C-b" . ibuffer)
   :custom
-  (ibuffer-expert t)              ; Don't ask for confirmation on "dangerous" operations
-  (ibuffer-display-summary nil)   ; Hide the summary line for a cleaner look
-  (ibuffer-use-other-window nil)  ; Open ibuffer in the current window
-  (ibuffer-show-empty-filter-groups nil) ; Hide categories that have no buffers
-  (ibuffer-movement-cycle nil)    ; Don't wrap around at the end of the list
+  (ibuffer-expert t)
+  (ibuffer-display-summary nil)
+  (ibuffer-use-other-window nil)
+  (ibuffer-show-empty-filter-groups nil)
+  (ibuffer-movement-cycle nil)
   :config
-  ;; Update IBuffer whenever a buffer is created or killed
   (add-hook 'ibuffer-mode-hook #'ibuffer-auto-mode))
 
-;; Essential: Group buffers by project (modern alternative to ibuffer-vc)
 (use-package ibuffer-project
   :ensure t
   :hook (ibuffer-mode . (lambda ()
@@ -245,6 +342,16 @@
                           (unless (eq ibuffer-sorting-mode 'project-file-relative)
                             (ibuffer-do-sort-by-project-file-relative)))))
 
+;;; ==============================
+;;; 8. UTILITIES
+;;; ==============================
+
+(use-package magit
+  :ensure t
+  :bind ("C-x g" . magit-status)
+  :config
+  ;; Optional: improved performance on Windows/macOS
+  (setq magit-refresh-status-buffer nil))
 
 (use-package projectile
   :ensure t
@@ -253,24 +360,32 @@
   :bind (:map projectile-mode-map
               ("C-c p" . projectile-command-map)))
 
+(use-package consult-projectile
+  :ensure t
+  :after (consult projectile)
+  :config
+  (require 'consult-projectile))
+
 (use-package tramp
   :ensure nil
   :config
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
-(use-package anzu
-  :diminish
+(use-package isearch
+  :ensure nil ; Built-in
   :config
-  (global-anzu-mode +1))
+  ;; Show "3/15" in the modeline when searching
+  (setq isearch-lazy-count t)
 
-;; (use-package aggressive-indent
-;;   :ensure t
-;;   :config
-;;   (add-hook 'prog-mode-hook #'aggressive-indent-mode))
+  ;; Optional: Don't wait for me to stop typing to count matches
+  (setq isearch-lazy-highlight t))
+
+(use-package aggressive-indent
+  :ensure t
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode))
 
 (use-package diminish)
 
 (add-to-list 'load-path "~/.emacs.d/lisp/")
 (require 'my-python)
-
-
