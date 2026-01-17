@@ -114,12 +114,28 @@
   (python-shell-send-buffer)
   (message "Sent buffer."))
 
+
+
+;; -----------------------------------------------------------------------------
+;; cursor move
+;; -----------------------------------------------------------------------------
+(defun my/run-python-keep-focus ()
+  "Run Python. If in a programming mode, keep focus here. Otherwise, switch to shell."
+  (interactive)
+  (if (derived-mode-p 'prog-mode)
+      ;; If in a program file, run python but restore window focus immediately
+      (save-selected-window
+        (call-interactively 'run-python))
+    ;; If in a shell or text buffer, behave normally (jump to the new shell)
+    (call-interactively 'run-python)))
+
 ;; -----------------------------------------------------------------------------
 ;; Keybindings
 ;; -----------------------------------------------------------------------------
 
 ;; Standard Emacs bindings (C-c ...)
 (with-eval-after-load 'python
+  (define-key python-mode-map (kbd "C-c C-p") 'my/run-python-keep-focus)
   (define-key python-mode-map (kbd "C-c l") 'my/python-send-current-line)
   (define-key python-mode-map (kbd "C-c b") 'my/python-send-cell)
   (define-key python-mode-map (kbd "C-c a") 'my/python-send-buffer))

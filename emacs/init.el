@@ -71,11 +71,10 @@
   (global-auto-revert-mode 1)
   
   ;; Hooks
+  (setq-default python-indent-offset 4)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
   
   (add-hook 'python-mode-hook (lambda ()
-				;; Python mandates spaces, not tabs. 
-				;; Setting this to 't' creates syntax errors in modern Python.
 				(setq indent-tabs-mode nil) 
 				(setq python-indent 4) 
 				(setq python-indent-offset 4)
