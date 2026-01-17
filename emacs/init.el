@@ -71,29 +71,29 @@
   (global-auto-revert-mode 1)
   
   ;; Hooks
-  (setq-default python-indent-offset 4)
-  (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+  (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
   
-  (add-hook 'python-mode-hook (lambda ()
-				(setq indent-tabs-mode nil) 
-				(setq python-indent 4) 
-				(setq python-indent-offset 4)
-				(setq tab-width 4)))
+;;; ==============================
+;; python setup
+;;; ==============================
 
+(use-package python
+  :ensure nil
+  :mode ("\\.py\\'" . python-ts-mode)
+  :custom
+  (python-indent-offset 4)
+  (indent-tabs-mode nil)
+  :bind (:map python-base-mode-map  
+              ("<f5>" . my-python-run))
+  :config
   (defun my-python-run ()
     "Save and run the current python file (clean version)."
     (interactive)
-    (when (eq major-mode 'python-mode)
+    (when (derived-mode-p 'python-mode)
       (save-buffer)
-      ;; Just run python. The "Compilation started..." header 
-      ;; will act as your separator.
       (compile (format "python3 %s" (shell-quote-argument (buffer-file-name))))))
-
-  (with-eval-after-load 'python
-    (define-key python-mode-map (kbd "<f5>") 'my-python-run))
-  
-  )
-
+  (electric-indent-local-mode 1))
 
 ;;; ==============================
 ;;; 3. UNDO SYSTEM
@@ -161,16 +161,21 @@
 ;;; 6. AUTOCOMPLETE (COMPANY)
 ;;; ==============================
 (use-package company
-  :diminish
+  :ensure t
+  :diminish company-mode  ; Note: requires 'diminish' package installed
   :init
   (setq company-tooltip-idle-delay 10
-	company-tooltip-minimum 4
-	company-tooltip-minimum-width 40
-	company-idle-delay .3
-	company-show-numbers t
-	company-echo-delay 0
-	company-format-margin-function #'company-text-icons-margin)
+        company-tooltip-minimum 4
+        company-tooltip-minimum-width 40
+        company-idle-delay 0.3
+        company-show-numbers t
+        company-echo-delay 0
+        ;; Correct way to set the margin function for icons
+        company-format-margin-function #'company-text-icons-margin)
   :config
+  ;; Add the deduplication transformer
+  (add-to-list 'company-transformers #'delete-dups)
+  
   (global-company-mode))
 
 ;;; ==============================
@@ -218,6 +223,29 @@
 ;;; 8. UTILITIES
 ;;; ==============================
 
+
+(use-package ibuffer
+  :ensure nil
+  :bind ("C-x C-b" . ibuffer)
+  :custom
+  (ibuffer-expert t)              ; Don't ask for confirmation on "dangerous" operations
+  (ibuffer-display-summary nil)   ; Hide the summary line for a cleaner look
+  (ibuffer-use-other-window nil)  ; Open ibuffer in the current window
+  (ibuffer-show-empty-filter-groups nil) ; Hide categories that have no buffers
+  (ibuffer-movement-cycle nil)    ; Don't wrap around at the end of the list
+  :config
+  ;; Update IBuffer whenever a buffer is created or killed
+  (add-hook 'ibuffer-mode-hook #'ibuffer-auto-mode))
+
+;; Essential: Group buffers by project (modern alternative to ibuffer-vc)
+(use-package ibuffer-project
+  :ensure t
+  :hook (ibuffer-mode . (lambda ()
+                          (setq ibuffer-filter-groups (ibuffer-project-generate-filter-groups))
+                          (unless (eq ibuffer-sorting-mode 'project-file-relative)
+                            (ibuffer-do-sort-by-project-file-relative)))))
+
+
 (use-package projectile
   :ensure t
   :init
@@ -235,10 +263,10 @@
   :config
   (global-anzu-mode +1))
 
-(use-package aggressive-indent
-  :ensure t
-  :config
-  (add-hook 'prog-mode-hook #'aggressive-indent-mode))
+;; (use-package aggressive-indent
+;;   :ensure t
+;;   :config
+;;   (add-hook 'prog-mode-hook #'aggressive-indent-mode))
 
 (use-package diminish)
 
