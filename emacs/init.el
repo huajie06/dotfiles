@@ -67,6 +67,8 @@
   (electric-indent-mode 1)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)
+  (global-set-key (kbd "<f12>") 'toggle-truncate-lines)
+
 
   ;; Hooks
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -180,7 +182,7 @@
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init '(magit dired ibuffer)))
+  (evil-collection-init '(magit dired wdired ibuffer)))
 
 ;;; ==============================
 ;;; 5. UI & MODELINE
@@ -333,7 +335,41 @@
   (ibuffer-show-empty-filter-groups nil)
   (ibuffer-movement-cycle nil)
   :config
-  (add-hook 'ibuffer-mode-hook #'ibuffer-auto-mode))
+  (add-hook 'ibuffer-mode-hook #'ibuffer-auto-mode)
+
+  ;; 1. Define your groups
+  (setq ibuffer-saved-filter-groups
+        '(("default"
+           ("Dired"    (mode . dired-mode))
+           ("Org/Notes" (or
+                         (mode . org-mode)
+                         (mode . markdown-mode)
+                         (mode . text-mode)))
+           ("Code"      (or
+                         (mode . python-mode)
+                         (mode . js-mode)
+                         (mode . go-mode)
+                         (mode . sh-mode)
+                         (mode . web-mode)
+                         (mode . css-mode)))
+           ("Magit"    (name . "^magit"))
+           ("Shells"   (or
+                        (mode . eshell-mode)
+                        (mode . shell-mode)
+                        (mode . vterm-mode)))
+           ("Emacs"    (or
+                        (name . "^\\*scratch\\*$")
+                        (name . "^\\*Messages\\*$")
+                        (name . "^\\*Help\\*$")
+                        (name . "^\\*Backtrace\\*$")))
+           ;; "Default" contains anything that doesn't match above
+           )))
+
+  ;; 2. Force Ibuffer to use these groups on startup
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default"))))
+
 
 (use-package ibuffer-project
   :ensure t
@@ -345,6 +381,12 @@
 ;;; ==============================
 ;;; 8. UTILITIES
 ;;; ==============================
+
+(use-package markdown-mode
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+              ("C-c C-e" . markdown-do)))
 
 (use-package magit
   :ensure t
