@@ -347,17 +347,20 @@
                          (mode . text-mode)))
            ("Code"      (or
                          (mode . python-mode)
+                         (mode . python-ts-mode)
                          (mode . js-mode)
                          (mode . go-mode)
                          (mode . sh-mode)
                          (mode . web-mode)
                          (mode . css-mode)))
            ("Magit"    (name . "^magit"))
+           ("Setup"    (mode . emacs-lisp-mode))
            ("Shells"   (or
                         (mode . eshell-mode)
                         (mode . shell-mode)
                         (mode . vterm-mode)))
            ("Emacs"    (or
+                        (mode . emacs-lisp-compilation-mode)
                         (name . "^\\*scratch\\*$")
                         (name . "^\\*Messages\\*$")
                         (name . "^\\*Help\\*$")
