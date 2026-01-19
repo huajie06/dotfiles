@@ -1,3 +1,17 @@
+;; 1. Get the directory where THIS file (init.el) resides.
+;;    If this file is loaded, use load-file-name.
+;;    If we are evaluating the buffer directly, use buffer-file-name.
+(defconst my-config-path
+  (file-name-directory (or load-file-name buffer-file-name)))
+
+;; 2. Construct the full path to the 'lisp' folder relative to this file
+(defconst my-lisp-path
+  (expand-file-name "lisp" my-config-path))
+
+;; 3. Add that path to the load-path
+(add-to-list 'load-path my-lisp-path)
+
+
 ;;; ==============================
 ;;; 1. PACKAGE MANAGER BOOTSTRAP
 ;;; ==============================
@@ -432,5 +446,5 @@
 
 (use-package diminish)
 
-(add-to-list 'load-path "~/.emacs.d/lisp/")
+;;(add-to-list 'load-path "~/.emacs.d/lisp/")
 (require 'my-python)
