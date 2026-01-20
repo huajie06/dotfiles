@@ -108,6 +108,7 @@
   :ensure nil
   :custom
   (python-indent-offset 4)
+  (python-indent-guess-indent-offset nil)
   (indent-tabs-mode nil)
 
   ;; BEST PRACTICE: Use remapping instead of hardcoding file extensions.
