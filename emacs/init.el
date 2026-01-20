@@ -178,14 +178,19 @@
 (use-package evil
   :init
   (setq evil-want-keybinding nil)
-  ;; (setq evil-emacs-state-cursor '("black" box)
-  ;;       evil-normal-state-cursor '("purple" box)
-  ;;       evil-visual-state-cursor '("orange" box)
-  ;;       evil-insert-state-cursor '("magenta" bar))
+  (setq evil-search-module 'isearch)
   :config
   (evil-mode 1)
+  ;; (setq isearch-lazy-count t)
+  ;; (setq isearch-lazy-highlight t)
+  ;; (setq lazy-highlight-cleanup nil)
+  ;; (setq lazy-highlight-initial-delay 0)
+
+  ;; (setq lazy-count-prefix-format nil)
+  ;; (setq lazy-count-suffix-format " [%s/%s]")
+
   ;; Add this to your general Evil config
-  (define-key evil-motion-state-map (kbd "/") 'consult-line)
+  ;;(define-key evil-motion-state-map (kbd "/") 'consult-line)
   (define-key evil-normal-state-map (kbd "U") 'vundo)
 
   ;; Keybindings
@@ -230,19 +235,27 @@
 (use-package corfu
   :ensure t
   :custom
-  (corfu-auto t)                 ; Enable auto-completion
-  (corfu-auto-delay 0.2)         ; Delay before popup appears
-  (corfu-auto-prefix 2)          ; Show completion after 2 characters (tweak to 3 if too noisy)
-  (corfu-cycle t)                ; Allow cycling through candidates
-  (corfu-quit-no-match 'separator) ; Don't quit if you type something that doesn't match
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)
+  (corfu-cycle t)
+  (corfu-quit-no-match 'separator)
   :init
   (global-corfu-mode)
   :bind (:map corfu-map
-              ("RET" . nil)                 ; Enter = Newline (don't complete)
-              ("TAB" . corfu-insert)        ; Tab = Complete
+              ("RET" . nil)
+              ("TAB" . corfu-insert)
               ("<tab>" . corfu-insert)
-              ("C-j" . corfu-next)          ; Vim-style down
-              ("C-k" . corfu-previous)))    ; Vim-style up
+              ;; Explicitly ensure C-n/C-p are bound in the corfu-map
+              ("C-n" . corfu-next)
+              ("C-p" . corfu-previous))
+  :config
+  ;; Fix for Evil: Ensure corfu-map has priority
+  (evil-make-overriding-map corfu-map 'insert)
+
+  ;; Use a safer wrapper for normalization to avoid the 'setting-constant nil' error
+  (advice-add #'corfu--setup :after (lambda (&rest _) (evil-normalize-keymaps)))
+  (advice-add #'corfu--teardown :after (lambda (&rest _) (evil-normalize-keymaps))))
 
 ;; 2. CAPE (The Backends - "Dumb" completion sources)
 ;; Since you don't use LSP, this is CRITICAL.
@@ -250,6 +263,13 @@
 (use-package cape
   :ensure t
   :init
+  ;; 1. Define a wrapper function to silence the "dabbrev" label
+  (defun my/cape-dabbrev-silent ()
+    (cape-capf-properties #'cape-dabbrev :annotation-function (lambda (_) nil)))
+
+  ;; 2. Add the SILENT wrapper to the list (instead of the raw cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'my/cape-dabbrev-silent)
+
   ;; Add useful "dumb" backends to the completion list
   (add-to-list 'completion-at-point-functions #'cape-dabbrev) ; Words in all buffers
   (add-to-list 'completion-at-point-functions #'cape-file)    ; File paths
@@ -390,10 +410,11 @@
 
 (use-package ibuffer-project
   :ensure t
-  :hook (ibuffer-mode . (lambda ()
-                          (setq ibuffer-filter-groups (ibuffer-project-generate-filter-groups))
-                          (unless (eq ibuffer-sorting-mode 'project-file-relative)
-                            (ibuffer-do-sort-by-project-file-relative)))))
+  :hook
+  (ibuffer-mode . (lambda ()
+                    (setq ibuffer-filter-groups (ibuffer-project-generate-filter-groups))
+                    (unless (eq ibuffer-sorting-mode 'project-file-relative)
+                      (ibuffer-do-sort-by-project-file-relative)))))
 
 ;;; ==============================
 ;;; 8. UTILITIES
@@ -417,7 +438,31 @@
   :init
   (projectile-mode +1)
   :bind (:map projectile-mode-map
-              ("C-c p" . projectile-command-map)))
+              ("C-c p" . projectile-command-map))
+
+  :custom
+  (setq projectile-indexing-method 'alien)
+  (projectile-enable-caching t)
+
+  (projectile-globally-ignored-directories
+   '(".git" "node_modules" "dist" "build"
+     "target" "vendor" ".idea" ".vscode"
+     "venv" ".venv" "env" ".env" ".tox"
+     "__pycache__" ".pytest_cache" ".mypy_cache" "htmlcov"
+     "dist" "build" "site-packages"
+     ))
+
+  ;; 2. EXCLUDE EXTENSIONS
+  ;; Ignore files with specific extensions (speed up search)
+  (projectile-globally-ignored-file-suffixes
+   '(".elc" ".pyc" ".o" ".class" ".jar" "pyo" "pyd"
+     ".png" ".jpg" ".svg" ".db"))
+
+  ;; 3. EXCLUDE SPECIFIC FILES
+  ;; Ignore exact filenames
+  (projectile-globally-ignored-files
+   '("package-lock.json" "yarn.lock" ".DS_Store")))
+
 
 (use-package consult-projectile
   :ensure t
@@ -429,6 +474,17 @@
   :ensure nil
   :config
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
+(use-package anzu
+  :ensure t
+  :config
+  (global-anzu-mode +1)
+  (set-face-attribute 'anzu-mode-line nil
+                      :foreground "purple" :weight 'bold))
+
+(use-package evil-anzu
+  :ensure t
+  :after (evil anzu))
 
 (use-package isearch
   :ensure nil ; Built-in
