@@ -130,6 +130,7 @@
       (save-buffer)
       (compile (format "python3 %s" (shell-quote-argument (buffer-file-name))))))
 
+  (add-hook 'python-mode-hook #'superword-mode)
   ;; Enable electric indent (newline auto-indents)
   (electric-indent-local-mode 1))
 
@@ -204,6 +205,10 @@
   :config
   (evil-collection-init '(magit dired wdired ibuffer)))
 
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 ;;; ==============================
 ;;; 5. UI & MODELINE
 ;;; ==============================
@@ -238,8 +243,8 @@
   :ensure t
   :custom
   (corfu-auto t)
-  (corfu-auto-delay 0.3)
-  (corfu-auto-prefix 3)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-quit-no-match 'separator)
   :init
@@ -259,47 +264,50 @@
 
 ;; 2. CAPE (The Backends)
 (use-package cape
-  :ensure t
   :init
-  ;; ---------------------------------------------------------
-  ;; A. Define your custom wrappers
-  ;; ---------------------------------------------------------
-  (defun my/cape-dabbrev-silent ()
-    "A wrapper for dabbrev that suppresses the annotation label."
-    (cape-capf-properties #'cape-dabbrev :annotation-function (lambda (_) nil)))
-
-  ;; ---------------------------------------------------------
-  ;; B. Global Defaults (For LOCAL files)
-  ;; ---------------------------------------------------------
-  ;; Note: I removed the duplicate 'cape-dabbrev' line you had.
-  ;; You only need your silent wrapper.
-  (add-to-list 'completion-at-point-functions #'cape-file)            ; File paths (Great locally)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)         ; Language keywords
-  (add-to-list 'completion-at-point-functions #'my/cape-dabbrev-silent) ; Words in buffer
-
   (setq cape-dabbrev-check-other-buffers t)
-
-  :config
-  ;; ---------------------------------------------------------
-  ;; C. TRAMP Safety Hook (The Fix)
-  ;; ---------------------------------------------------------
-  (defun my/configure-remote-completion ()
-    "Strip out unsafe backends and tune corfu for TRAMP buffers."
-    (when (file-remote-p default-directory)
-      ;; 1. Force the backend list to ONLY be safe text-based sources.
-      ;;    We intentionally OMIT #'cape-file here to stop the recursion error.
-      (setq-local completion-at-point-functions
-                  (list #'my/cape-dabbrev-silent
-                        #'cape-keyword))
-
-      ;; 2. (Optional) Make Corfu slightly lazier on remote to prevent lag
-      (setq-local corfu-auto-delay 0.5   ; Wait longer before popping up
-                  corfu-auto-prefix 3))) ; Require 3 chars
-
-  ;; Apply this hook to every file you open
-  (add-hook 'find-file-hook #'my/configure-remote-completion))
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-keyword))
 
 
+;; (use-package cape
+;;   :ensure t
+;;   :init
+;;   ;; ---------------------------------------------------------
+;;   ;; A. Define your custom wrappers
+;;   ;; ---------------------------------------------------------
+;;   (setq cape-dabbrev-check-other-buffers t)
+;;   ;; ---------------------------------------------------------
+;;   ;; B. Global Defaults (For LOCAL files)
+;;   ;; ---------------------------------------------------------
+;;   ;; Note: I removed the duplicate 'cape-dabbrev' line you had.
+;;   ;; You only need your silent wrapper.
+;;   (add-to-list 'completion-at-point-functions #'cape-file)            ; File paths (Great locally)
+;;   (add-to-list 'completion-at-point-functions #'cape-keyword)         ; Language keywords
+
+;;   :config
+;;   (setq cape-keyword-list
+;;         '((python-ts-mode "def" "class" "import" "from" "if" "else" "return" "print" "True" "False" "None" "try" "except")))
+;; ---------------------------------------------------------
+;; C. TRAMP Safety Hook (The Fix)
+;; ---------------------------------------------------------
+;; (defun my/configure-remote-completion ()
+;;   "Strip out unsafe backends and tune corfu for TRAMP buffers."
+;;   (when (file-remote-p default-directory)
+;;     ;; 1. Force the backend list to ONLY be safe text-based sources.
+;;     ;;    We intentionally OMIT #'cape-file here to stop the recursion error.
+;;     (setq-local completion-at-point-functions
+;;                 (list #'my/cape-dabbrev-silent
+;;                       #'cape-keyword))
+
+;;     ;; 2. (Optional) Make Corfu slightly lazier on remote to prevent lag
+;;     (setq-local corfu-auto-delay 0.5   ; Wait longer before popping up
+;;                 corfu-auto-prefix 3))) ; Require 3 chars
+
+;; ;; Apply this hook to every file you open
+;; (add-hook 'find-file-hook #'my/configure-remote-completion)
+;; )
 
 ;;; ==============================
 ;;; 7. NAVIGATION & SEARCH (MODERN STACK)
@@ -522,7 +530,25 @@
   :config
   (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode))
 
+
+(use-package indent-bars
+  :custom
+  (indent-bars-no-descend-lists 'skip) ; prevent extra bars in nested lists + skip intermediate bars
+  (indent-bars-treesit-support t)
+  (indent-bars-treesit-ignore-blank-lines-types '("module"))
+  ;; Add other languages as needed; check the wiki
+  (indent-bars-treesit-scope '((python function_definition class_definition for_statement
+	                               if_statement with_statement while_statement)))
+  ;; Note: wrap likely not be needed if no-descend-list is enough
+  ;;(indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+  ;;				      list list_comprehension
+  ;;				      dictionary dictionary_comprehension
+  ;;				      parenthesized_expression subscript)))
+  :hook ((python-base-mode yaml-mode) . indent-bars-mode))
+
 (use-package diminish)
 
 ;;(add-to-list 'load-path "~/.emacs.d/lisp/")
 (require 'my-python)
+
+(require 'init-org)

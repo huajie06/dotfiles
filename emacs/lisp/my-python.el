@@ -20,7 +20,7 @@
             ((> (length found-interpreters) 0)
              (completing-read (format "Interpreter for %s: " (file-name-nondirectory (directory-file-name project-root)))
                               (append found-interpreters '("System Default (ipython)"))))
-            (t 
+            (t
              (message "No virtualenv found. Using system default.")
              "System Default (ipython)"))))
 
@@ -31,24 +31,24 @@
             (setq-local python-shell-virtualenv-root nil))
         (progn
           (setq-local python-shell-interpreter chosen-interpreter)
-          (setq-local python-shell-virtualenv-root 
+          (setq-local python-shell-virtualenv-root
                       (file-name-directory (directory-file-name (file-name-directory chosen-interpreter))))))
 
       ;; 4. --- THE NOISE FIXES ---
-      
+
       ;; Force simple prompting
       (setq-local python-shell-interpreter-args "-i --simple-prompt --classic")
-      
+
       ;; Disable the native completion handshake (THE CULPRIT)
       (setq-local python-shell-completion-native-enable nil)
-      
+
       ;; Tell Emacs not to wait for echoes
       (setq-local comint-process-echoes t)
 
       ;; 5. Project Isolation
       (let ((proj-name (file-name-nondirectory (directory-file-name project-root))))
         (setq-local python-shell-buffer-name (format "Python[%s]" proj-name)))
-      
+
       (message "Ready. REPL: *%s* (Native Completion Disabled)" python-shell-buffer-name))))
 ;;; my-python.el --- Custom Python Data Science Workflow
 
@@ -66,7 +66,7 @@
       (python-shell-send-region start end)
       ;; We send a newline ensuring the shell accepts the input immediately
       ;; (Optional: keeps the shell from waiting for more input)
-      (python-shell-send-string "\n") 
+      (python-shell-send-string "\n")
       (message "Sent line."))))
 
 ;; -----------------------------------------------------------------------------
@@ -78,7 +78,7 @@
   (save-excursion
     (let ((start (point-min))
           (end (point-max)))
-      
+
       ;; Search backward for the start of the cell (# %%)
       (if (re-search-backward "^# %%" nil t)
           (setq start (match-end 0)) ;; Start sending *after* the delimiter
@@ -86,11 +86,11 @@
 
       ;; Move forward to search for the end of the cell
       (goto-char (if (> start (point)) start (point)))
-      
+
       (if (re-search-forward "^# %%" nil t)
           (setq end (match-beginning 0)) ;; End sending *before* the next delimiter
         (setq end (point-max)))          ;; Or end at file end
-      
+
       (cons start end))))
 
 (defun my/python-send-cell ()
@@ -151,6 +151,7 @@
       (kbd "<leader>l") 'my/python-send-current-line
       (kbd "<leader>b") 'my/python-send-cell
       (kbd "<leader>a") 'my/python-send-buffer)))
+
 
 (provide 'my-python)
 ;;; my-python.el ends here
