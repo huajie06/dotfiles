@@ -3,7 +3,6 @@
 ;; 1. MAIN ORG CONFIGURATION
 ;; ----------------------------------------------------------------
 (use-package org
-  :ensure t  ; Auto-install if missing (rare for Org, but good practice)
   :bind
   (("C-c a" . org-agenda)
    ("C-c c" . org-capture))
@@ -12,6 +11,10 @@
   :config
   ;; Disable auto-pairing of < > in Org mode only
   (add-hook 'org-mode-hook (lambda () (modify-syntax-entry ?< ".")))
+
+  ;; --- TEXT WRAPPING ---
+  ;; Set the line length (80 is standard, 100 is wider)
+  (setq-default fill-column 80)
 
   ;; --- VISUALS & UI ---
   (setq org-startup-indented t         ; Visual indentation
@@ -93,18 +96,7 @@
   :config
   (setq org-download-image-dir "~/org/images"))
 
-;; 5. TEXT WRAPPING
-;; ----------------------------------------------------------------
-;; Set the line length (80 is standard, 100 is wider)
-(setq-default fill-column 80)
-
-;; Turn on auto-fill-mode ONLY for Org files
-(add-hook 'org-mode-hook 'turn-on-auto-fill)
-
-
 (require 'org-clock)
-
-
 (defun org-dblock-write:daily-summary (params)
   "Generates a single table with one row per day and a grand total."
   (let* ((block (plist-get params :block))
@@ -142,4 +134,5 @@
     (insert "|--|\n")
     (insert (format "| **Total** | **%s** |\n" (org-duration-from-minutes grand-total)))
     (org-table-align)))
+
 (provide 'init-org)
