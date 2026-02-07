@@ -83,7 +83,7 @@
   (global-auto-revert-mode 1)
   (global-set-key (kbd "<f12>") 'toggle-truncate-lines)
 
-
+  (load-theme 'modus-operandi t)
   ;; Hooks
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
@@ -212,27 +212,55 @@
 ;;; ==============================
 ;;; 5. UI & MODELINE
 ;;; ==============================
-(use-package telephone-line
+;; (use-package telephone-line
+;;   :ensure t
+;;   :init
+;;   (setq telephone-line-primary-left-separator 'telephone-line-identity-left
+;;         telephone-line-secondary-left-separator 'telephone-line-identity-hollow-left
+;;         telephone-line-primary-right-separator 'telephone-line-identity-right
+;;         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-right)
+;;   (setq telephone-line-height 20)
+
+;;   (setq telephone-line-lhs
+;;         '((evil   . (telephone-line-evil-tag-segment))
+;;           (accent . (telephone-line-vc-segment))  ;; Git Branch
+;;           (nil    . (telephone-line-buffer-segment))))
+
+;;   (setq telephone-line-rhs
+;;         '((nil    . (telephone-line-misc-info-segment)) ;; encoding/errors
+;;           (accent . (telephone-line-major-mode-segment))
+;;           (evil   . (telephone-line-airline-position-segment))))
+;;   :config
+;;   (telephone-line-evil-config)
+;;   (telephone-line-mode 1))
+
+(use-package doom-modeline
   :ensure t
-  :init
-  (setq telephone-line-primary-left-separator 'telephone-line-identity-left
-        telephone-line-secondary-left-separator 'telephone-line-identity-hollow-left
-        telephone-line-primary-right-separator 'telephone-line-identity-right
-        telephone-line-secondary-right-separator 'telephone-line-identity-hollow-right)
-  (setq telephone-line-height 20)
+  :init (doom-modeline-mode 1)
+  :custom
+  ;; 1. Height & Width
+  (doom-modeline-height 25)      ;; Slightly taller for a "modern" look (default is 25)
+  (doom-modeline-bar-width 4)    ;; The colored bar on the left
 
-  (setq telephone-line-lhs
-        '((evil   . (telephone-line-evil-tag-segment))
-          (accent . (telephone-line-vc-segment))  ;; Git Branch
-          (nil    . (telephone-line-buffer-segment))))
+  ;; 2. File Name Style
+  ;; 'truncate-upto-project: shows "project/src/main.py" (Clean & informative)
+  ;; 'truncate-from-project: shows ".../src/main.py"
+  (doom-modeline-buffer-file-name-style 'truncate-upto-project)
 
-  (setq telephone-line-rhs
-        '((nil    . (telephone-line-misc-info-segment)) ;; encoding/errors
-          (accent . (telephone-line-major-mode-segment))
-          (evil   . (telephone-line-airline-position-segment))))
-  :config
-  (telephone-line-evil-config)
-  (telephone-line-mode 1))
+  ;; 3. Icons
+  (doom-modeline-icon t)         ;; Enable icons
+  (doom-modeline-major-mode-icon t)
+  (doom-modeline-file-time-icon nil)
+
+  ;; 4. Segments (What to show/hide)
+  (doom-modeline-minor-modes nil)
+  (doom-modeline-enable-word-count nil)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-indent-info nil)
+
+  ;; 5. Git & Workspace
+  (doom-modeline-project-detection 'auto)
+  (doom-modeline-workspace-name t))
 
 ;;; ==============================
 ;;; 6. AUTOCOMPLETE
