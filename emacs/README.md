@@ -72,11 +72,15 @@ Capture daily activities (workout, reading, medication, diet) into `~/org/daily-
 ** 2026-05 May
 *** 2026-05-03 Sunday
 **** Workout
-**** Reading :30min
-**** Medication :10min at 1pm
+ran 5k
+**** Reading
+30 minutes
+**** Medication
+10m at 1pm
 ```
 
-Type optional detail after the activity name (duration, notes, etc.). `C-c C-c` to finish.
+Type optional details below the activity name. Multiline notes are fine, which
+is useful for workouts, meals, or other richer logs. `C-c C-c` to finish.
 
 ### Calendar view
 
@@ -99,6 +103,26 @@ Activity: Workout        Range: last 31 days        Count: 8 / 31
 - **n** / **p** — navigate months
 - **+** / **-** — change summary range (30 → 60 → 90 → 180 → 365 days)
 - **g** — switch to a different activity
+- **c** — run capture from the view
+- **q** — quit
+
+### Table view
+
+`C-c t` opens a cross-activity table with one row per day. It keeps the same
+activity colors as the calendar, but each activity cell shows a compact detail
+snippet when the entry has body text. Empty activity headings still show the
+activity letter, and missing activities show `.`.
+
+```
+Date            Workout        Reading        Medication     Diet
+2026-05-03 Sun  ran 5k         30 minutes     10m at 1pm     .
+```
+
+- **n** / **p** — scroll by 30 days
+- **j** / **k** — move down/up one line
+- **+** / **-** — change the range (30 → 60 → 90 → 180 → 365 days)
+- **v** — switch back to the calendar view
+- **RET** — open the date's subtree in `daily-log.org`
 - **c** — run capture from the view
 - **q** — quit
 
