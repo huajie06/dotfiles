@@ -1,20 +1,63 @@
+;;; init-python.el --- Python tree-sitter, shell, and custom utilities
+
+(require 'python)
+
+;;; Tree-sitter grammar sources
+(use-package treesit
+  :ensure nil
+  :config
+  (setq treesit-language-source-alist
+        '((python "https://github.com/tree-sitter/tree-sitter-python")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
+          (css "https://github.com/tree-sitter/tree-sitter-css")
+          (json "https://github.com/tree-sitter/tree-sitter-json"))))
+
+;;; Python mode configuration
+(use-package python
+  :ensure nil
+  :custom
+  (python-indent-offset 4)
+  (python-indent-guess-indent-offset nil)
+  (indent-tabs-mode nil)
+  :init
+  ;; Remap python-mode to python-ts-mode
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+  :bind (:map python-base-mode-map
+              ("<f5>" . my-python-run))
+  :config
+  (defun my-python-run ()
+    "Save and run the current python file."
+    (interactive)
+    (when (derived-mode-p 'python-base-mode)
+      (save-buffer)
+      (let ((py (or (executable-find "python3")
+                    (executable-find "python")
+                    "python3")))
+        (compile (format "%s %s" py (shell-quote-argument (buffer-file-name)))))))
+
+  (add-hook 'python-mode-hook #'superword-mode)
+  (electric-indent-local-mode 1))
+
+;;; Custom Python utilities
+
 (defun my/set-python-interpreter ()
-  "Search for venvs, prompt user, isolate process, and FIX THE NOISE."
+  "Search for venvs, prompt user, isolate process."
   (interactive)
-  ;; 1. Identify Project Root
   (let* ((project-root (if (bound-and-true-p projectile-mode)
                            (projectile-project-root)
                          (file-name-directory (buffer-file-name))))
          (venv-candidates '(".venv" "venv" "env" ".env"))
          (found-interpreters '()))
-
-    ;; Search for valid IPython executables
     (dolist (dir venv-candidates)
-      (let ((exe-path (expand-file-name (concat dir "/bin/ipython") project-root)))
+      (let ((exe-path (expand-file-name
+                       (if (eq system-type 'windows-nt)
+                           (concat dir "/Scripts/ipython.exe")
+                         (concat dir "/bin/ipython"))
+                       project-root)))
         (when (file-exists-p exe-path)
           (push exe-path found-interpreters))))
-
-    ;; 2. Prompt the user
     (let ((chosen-interpreter
            (cond
             ((> (length found-interpreters) 0)
@@ -23,8 +66,6 @@
             (t
              (message "No virtualenv found. Using system default.")
              "System Default (ipython)"))))
-
-      ;; 3. Set the interpreter
       (if (string= chosen-interpreter "System Default (ipython)")
           (progn
             (setq-local python-shell-interpreter "ipython")
@@ -33,64 +74,35 @@
           (setq-local python-shell-interpreter chosen-interpreter)
           (setq-local python-shell-virtualenv-root
                       (file-name-directory (directory-file-name (file-name-directory chosen-interpreter))))))
-
-      ;; 4. --- THE NOISE FIXES ---
-
-      ;; Force simple prompting
       (setq-local python-shell-interpreter-args "-i --simple-prompt --classic")
-
-      ;; Disable the native completion handshake (THE CULPRIT)
       (setq-local python-shell-completion-native-enable nil)
-
-      ;; Tell Emacs not to wait for echoes
       (setq-local comint-process-echoes t)
-
-      ;; 5. Project Isolation
       (let ((proj-name (file-name-nondirectory (directory-file-name project-root))))
         (setq-local python-shell-buffer-name (format "Python[%s]" proj-name)))
-
       (message "Ready. REPL: *%s* (Native Completion Disabled)" python-shell-buffer-name))))
-;;; my-python.el --- Custom Python Data Science Workflow
 
-(require 'python)
-
-;; -----------------------------------------------------------------------------
-;; 1. Send Current Line
-;; -----------------------------------------------------------------------------
 (defun my/python-send-current-line ()
-  "Send the current physical line to the Python process, regardless of cursor position."
+  "Send the current physical line to the Python process."
   (interactive)
   (save-excursion
     (let ((start (line-beginning-position))
           (end (line-end-position)))
       (python-shell-send-region start end)
-      ;; We send a newline ensuring the shell accepts the input immediately
-      ;; (Optional: keeps the shell from waiting for more input)
       (python-shell-send-string "\n")
       (message "Sent line."))))
 
-;; -----------------------------------------------------------------------------
-;; 2. Send Code Block (Cell)
-;;    Looks for "# %%" delimiters, similar to VS Code / Jupyter
-;; -----------------------------------------------------------------------------
 (defun my/python-get-cell-bounds ()
-  "Return a cons cell (start . end) of the current code block."
+  "Return a cons cell (start . end) of the current '# %%' delimited block."
   (save-excursion
     (let ((start (point-min))
           (end (point-max)))
-
-      ;; Search backward for the start of the cell (# %%)
       (if (re-search-backward "^# %%" nil t)
-          (setq start (match-end 0)) ;; Start sending *after* the delimiter
-        (goto-char (point-min)))     ;; Or start at file beginning
-
-      ;; Move forward to search for the end of the cell
+          (setq start (match-end 0))
+        (goto-char (point-min)))
       (goto-char (if (> start (point)) start (point)))
-
       (if (re-search-forward "^# %%" nil t)
-          (setq end (match-beginning 0)) ;; End sending *before* the next delimiter
-        (setq end (point-max)))          ;; Or end at file end
-
+          (setq end (match-beginning 0))
+        (setq end (point-max)))
       (cons start end))))
 
 (defun my/python-send-cell ()
@@ -99,51 +111,32 @@
   (let* ((bounds (my/python-get-cell-bounds))
          (start (car bounds))
          (end (cdr bounds)))
-    ;; Check if the cell is empty or just whitespace
     (if (= start end)
         (message "Empty cell")
       (python-shell-send-region start end)
       (message "Sent cell."))))
 
-;; -----------------------------------------------------------------------------
-;; 3. Send Entire File
-;; -----------------------------------------------------------------------------
 (defun my/python-send-buffer ()
   "Send the entire buffer to the Python shell."
   (interactive)
   (python-shell-send-buffer)
   (message "Sent buffer."))
 
-
-
-;; -----------------------------------------------------------------------------
-;; cursor move
-;; -----------------------------------------------------------------------------
 (defun my/run-python-keep-focus ()
-  "Run Python. If in a programming mode, keep focus here. Otherwise, switch to shell."
+  "Run Python. Keep focus in code buffers; switch to shell otherwise."
   (interactive)
   (if (derived-mode-p 'prog-mode)
-      ;; If in a program file, run python but restore window focus immediately
       (save-selected-window
         (call-interactively 'run-python))
-    ;; If in a shell or text buffer, behave normally (jump to the new shell)
     (call-interactively 'run-python)))
 
-;; -----------------------------------------------------------------------------
-;; Keybindings
-;; -----------------------------------------------------------------------------
+;;; Keybindings
 
-;; Standard Emacs bindings (C-c ...)
 (with-eval-after-load 'python
   (define-key python-mode-map (kbd "C-c C-p") 'my/run-python-keep-focus)
   (define-key python-mode-map (kbd "C-c l") 'my/python-send-current-line)
   (define-key python-mode-map (kbd "C-c b") 'my/python-send-cell)
   (define-key python-mode-map (kbd "C-c a") 'my/python-send-buffer))
-
-;; OPTIONAL: Evil-mode bindings (Leader keys)
-;; Since you use evil, you might prefer these.
-;; Uncomment the block below if you use 'evil-leader' or 'general.el'
-;; Or just use 'evil-define-key' here:
 
 (with-eval-after-load 'evil
   (with-eval-after-load 'python
@@ -152,6 +145,5 @@
       (kbd "<leader>b") 'my/python-send-cell
       (kbd "<leader>a") 'my/python-send-buffer)))
 
-
-(provide 'my-python)
-;;; my-python.el ends here
+(provide 'init-python)
+;;; init-python.el ends here

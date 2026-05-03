@@ -1,0 +1,12 @@
+# Compiled Emacs Lisp
+*.elc
+
+# Emacs backup / auto-save files
+*~
+\#*\#
+
+# macOS
+.DS_Store
+
+# Emacs native compilation cache (generated)
+eln-cache/
