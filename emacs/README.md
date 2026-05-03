@@ -37,7 +37,8 @@ emacs/
 │   ├── init-completion.el # Corfu/Cape/Vertico/Consult/Embark
 │   ├── init-evil.el       # Evil, evil-collection, undo-fu/vundo stack
 │   ├── init-python.el     # Tree-sitter, python-ts-mode, REPL utilities
-│   └── init-org.el        # Org mode, capture, babel, clocking
+│   ├── init-org.el        # Org mode, capture, babel, clocking
+│   └── init-daily-log.el  # Daily activity logging with calendar view
 ├── test/                  # Ad-hoc scripts, experiments (not loaded by Emacs)
 ├── notes/                 # Personal reference (not loaded by Emacs)
 └── move_files.sh          # Alternative deployment script with backup
@@ -54,8 +55,62 @@ Modules are loaded in this order by `init.el`. Each module depends only on modul
 5. **`init-evil`** — Depends on tools (for Anzu). Evil mode, evil-collection, evil-surround, undo-fu/vundo.
 6. **`init-python`** — Depends on core. Loads `python.el` up-front. Evil keybindings deferred. Tree-sitter grammars, `python-ts-mode` remap, `# %%` cell navigation, venv detection.
 7. **`init-org`** — Depends on core. Forces org to load via `(require 'org-clock)`. Capture templates, babel, org-download, clock summary dynamic blocks.
+8. **`init-daily-log`** — Depends on org. Daily activity logging with org-capture + calendar view for visualizing habits (workout, reading, medication, etc.).
 
 A module can be disabled by commenting out its `require` in `init.el`.
+
+## Daily log system
+
+Capture daily activities (workout, reading, medication, diet) into `~/org/daily-log.org` via org-capture, then visualize them in a color-coded month calendar.
+
+### Capturing entries
+
+`C-c d` runs a capture template that prompts for an activity and files the entry under today's date in a datetree:
+
+```
+* 2026
+** 2026-05 May
+*** 2026-05-03 Sunday
+**** Workout
+**** Reading :30min
+**** Medication :10min at 1pm
+```
+
+Type optional detail after the activity name (duration, notes, etc.). `C-c C-c` to finish.
+
+### Calendar view
+
+`C-c v` opens the calendar buffer (`*Daily Log*`).
+
+```
+Activity: Workout        Range: last 31 days        Count: 8 / 31
+──────────────────────────────────────────────────────────────────────
+
+                   May 2026
+
+ Mon Tue Wed Thu Fri Sat Sun
+   .   .   .   .   1   2   3
+   4    5    6    7    8    9   10
+   ...
+```
+
+- Day numbers are color-coded when an activity occurred (red=Workout, blue=Reading, green=Medication, orange=Diet)
+- Today is highlighted
+- **n** / **p** — navigate months
+- **+** / **-** — change summary range (30 → 60 → 90 → 180 → 365 days)
+- **g** — switch to a different activity
+- **c** — run capture from the view
+- **q** — quit
+
+### Customizing activities
+
+Edit `my/daily-log-activities` in `lisp/init-daily-log.el` to add or change activities. Each entry needs a name, a single-letter code, and a face:
+
+```elisp
+'(("Workout"    "W" my/daily-log-face-workout)
+  ("Reading"    "R" my/daily-log-face-reading)
+  ...)
+```
 
 ## `early-init.el` and the startup sequence
 

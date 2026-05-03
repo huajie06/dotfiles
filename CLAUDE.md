@@ -40,6 +40,7 @@ The config is split into modular, topic-based files loaded in dependency order. 
 - `init-evil.el` — Evil mode, evil-collection, evil-surround, evil-anzu, plus the undo stack (undo-fu, undo-fu-session, vundo).
 - `init-python.el` — Tree-sitter grammars, `python-ts-mode` remap, Python shell, `# %%` cell navigation, venv detection, REPL keybindings.
 - `init-org.el` — Org mode with capture templates, babel, org-tempo, org-download, clock summary dynamic block.
+- `init-daily-log.el` — Daily activity logging via org-capture into `~/org/daily-log.org`, with a per-activity color-coded month calendar view (`C-c v`).
 
 **Other files:**
 - `emacs/README.md` — Detailed architecture docs, load order rationale, design conventions.

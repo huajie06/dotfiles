@@ -22,6 +22,7 @@
 (require 'init-evil)       ;; evil, evil-collection, evil-surround
 (require 'init-python)     ;; python + tree-sitter
 (require 'init-org)        ;; org-mode
+(require 'init-daily-log) ;; daily activity capture + calendar view
 
 (provide 'init)
 ;;; init.el ends here
