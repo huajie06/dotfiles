@@ -77,10 +77,11 @@
 ;;; Activity definitions
 (defvar my/daily-log-activities
   '(("Workout"    "W" my/daily-log-face-workout)
-    ;; ("Reading"    "R" my/daily-log-face-reading)
+    ("Reading"    "R" my/daily-log-face-reading)
     ;; ("Medication" "M" my/daily-log-face-medication)
     ("Diet"       "D" my/daily-log-face-diet)
-    ("basketball" "B" nil))
+    ;; ("basketball" "B" nil)
+    )
   "List of activities: (name letter face).
 Letter and face may be nil for auto-assignment.")
 
