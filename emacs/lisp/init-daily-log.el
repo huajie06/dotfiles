@@ -1,60 +1,74 @@
-;;; init-daily-log.el --- Daily activity logging with Org capture and calendar view
+;;; init-daily-log.el --- Daily activity logging with Org capture and calendar/table views
 
 ;; Design
 ;; ──────
-;; Activities (workout, reading, medication, diet, etc.) are logged as
-;; level-4 headlines under a date-tree in ~/org/daily-log.org:
+;; Activities are logged as level-4 headlines with optional body text
+;; under a date-tree in ~/org/daily-log.org:
+;;
+;;   #+startup: overview
 ;;
 ;;   * 2026
 ;;   ** 2026-05 May
 ;;   *** 2026-05-03 Sunday
 ;;   **** Workout
-;;   ran 5k
+;;   ran 5k in the morning
 ;;   **** Reading
 ;;   30 minutes
 ;;   **** Medication
 ;;   10m at 1pm
 ;;
-;; Each activity is defined in `my/daily-log-activities' with a name,
-;; single-letter code, and face (background color for the calendar/table).
+;; Tracked activities are defined in `my/daily-log-activities'.  Each
+;; entry is (name letter face) — letter and face may be nil for
+;; auto-assignment (first letter of name, color from a 10-tone palette).
+;; Only tracked activities appear in views; anything else captured is
+;; stored but hidden until added to the list.
 ;;
-;; Two complementary views are provided:
+;; Three entry points (global keybindings):
 ;;
-;; Calendar view (C-c v) — per-activity month grid
-;;   Shows one activity at a time. Day numbers are color-coded when
-;;   the activity occurred. Today is highlighted. Good for answering
-;;   "how often did I do X this month?"
+;;   C-c d — capture: free-form completing-read (suggestions from the
+;;           tracked list).  Point lands below the new heading for
+;;           optional multiline body text.  C-c C-c to finish.
 ;;
-;; Table view (C-c t) — per-day cross-activity scrollable table
-;;   Shows all activities as columns, one row per day. Activity cells
-;;   show a compact detail snippet when available, fall back to the
-;;   activity letter for empty headings, and use dots for absence.
-;;   Scrollable with n/p (30-day jumps) and +/- (range). Good for
-;;   answering "what did I do on date Y?" RET on a date opens
-;;   daily-log.org at that day's subtree, folded to show only that entry.
+;;   C-c v — calendar: per-activity month grid.  Day numbers are
+;;           color-coded with a background face.  Today is highlighted.
+;;           n/p months, g switches activity, +/- range.
+;;           RET shows a detail popup in a bottom side window.
 ;;
-;; Capture (C-c d) — files a new entry under today's datetree heading.
-;;   Prompts for activity, then leaves point below the heading for
-;;   optional multiline details.
-
+;;   C-c t — table: cross-activity scrollable view, one row per day,
+;;           one column per tracked activity.  Cells show:
+;;             detail snippet (body text, truncated) when present
+;;             "X" (colored + centered) for bare headlines
+;;             "." (centered) for no activity that day
+;;           Columns and headers are center-aligned.
+;;           n/p scroll the window by 30 days, +/- cycle range
+;;           (30/60/90/180/365).  RET opens daily-log.org with the
+;;           target day's subtree expanded and everything else folded.
+;;           Cursor lands on today's row on open.
+;;
+;;   Both views use `special-mode' with `evil-set-initial-state' to
+;;   'emacs so single-letter keys bypass Evil.
+;;
 ;; How it works
 ;; ────────────
-;; Parsing: `my/daily-log--parse-dates' scans the org file for a single
-;; activity across all dates. `my/daily-log--parse-all' builds a
-;; date→(activity . detail) hash table for the cross-activity table.
+;; Parsing: `my/daily-log--parse-dates' scans the org file for a
+;; single activity across all dates (used by calendar view).
+;; `my/daily-log--parse-all' builds a date→((activity . detail)…)
+;; hash table, capturing both heading suffixes and body text under
+;; each level-4 heading (used by table view).
 ;;
-;; Calendar: `my/daily-log--render' builds a monospace grid of the
-;; target month. Activity days get a background-colored face; today
-;; gets a neutral highlight. n/p navigate months, g switches activity.
+;; Calendar: `my/daily-log--render' builds a monospace grid for the
+;; target month from the single-activity date list.
 ;;
-;; Table: `my/daily-log--render-table' generates rows for a sliding
-;; window of `range-days' days starting from `start-date'. Summary
-;; counts are computed independently over the trailing range. n/p
-;; shift the window by 30 days, +/- cycle the range (30/60/90/180/365).
+;; Table: `my/daily-log--render-table' iterates a sliding window of
+;; `range-days' days starting from `start-date'.  Summary counts are
+;; computed independently over the trailing range (not limited to the
+;; visible window).  Cell rendering uses `my/daily-log--table-cell'
+;; with `my/daily-log--center' for alignment.
 ;;
-;; Both views use `special-mode' + `evil-set-initial-state' to 'emacs
-;; so that single-letter keys (n/p/q/c/g/t/v) pass through to our
-;; keymap instead of being intercepted by Evil.
+;; Faces: four named faces for the built-in activities, plus a
+;; 10-color palette (`my/daily-log--color-palette') for auto-assigned
+;; colors.  `my/daily-log--face' picks the explicit face if set,
+;; otherwise cycles through the palette by list position.
 
 (require 'cl-lib)
 (require 'calendar)
@@ -63,15 +77,48 @@
 ;;; Activity definitions
 (defvar my/daily-log-activities
   '(("Workout"    "W" my/daily-log-face-workout)
-    ("Reading"    "R" my/daily-log-face-reading)
-    ("Medication" "M" my/daily-log-face-medication)
-    ("Diet"       "D" my/daily-log-face-diet))
-  "List of activities: (name letter face).")
+    ;; ("Reading"    "R" my/daily-log-face-reading)
+    ;; ("Medication" "M" my/daily-log-face-medication)
+    ("Diet"       "D" my/daily-log-face-diet)
+    ("basketball" "B" nil))
+  "List of activities: (name letter face).
+Letter and face may be nil for auto-assignment.")
+
+(defun my/daily-log--letter (entry)
+  "Return display letter for activity ENTRY (auto-generate if nil)."
+  (or (nth 1 entry)
+      (upcase (substring (nth 0 entry) 0 1))))
+
+(defvar my/daily-log--color-palette
+  '(my/daily-log-face-p1  my/daily-log-face-p2  my/daily-log-face-p3
+    my/daily-log-face-p4  my/daily-log-face-p5  my/daily-log-face-p6
+    my/daily-log-face-p7  my/daily-log-face-p8  my/daily-log-face-p9
+    my/daily-log-face-p10)
+  "Palette of 10 faces for auto-assigned activity colors.")
+
+(defun my/daily-log--face (entry)
+  "Return face for activity ENTRY.
+Uses explicit face if set, otherwise cycles through the color palette
+based on the entry's position in `my/daily-log-activities'."
+  (or (nth 2 entry)
+      (let ((idx (cl-position entry my/daily-log-activities :test #'eq)))
+        (nth (mod (or idx 0) (length my/daily-log--color-palette))
+             my/daily-log--color-palette))))
 
 (defvar my/daily-log-table-cell-width 13
   "Width of each activity cell in the daily log table view.")
 
-;;; Faces
+;;; Faces (4 named + 10 palette = 14 total)
+(defface my/daily-log-face-p1  '((t :background "#f0d0d0" :foreground "#600" :weight bold)) "Palette 1")
+(defface my/daily-log-face-p2  '((t :background "#d0d8f0" :foreground "#004" :weight bold)) "Palette 2")
+(defface my/daily-log-face-p3  '((t :background "#d0f0d0" :foreground "#060" :weight bold)) "Palette 3")
+(defface my/daily-log-face-p4  '((t :background "#f0e8c0" :foreground "#640" :weight bold)) "Palette 4")
+(defface my/daily-log-face-p5  '((t :background "#e8d0f0" :foreground "#408" :weight bold)) "Palette 5")
+(defface my/daily-log-face-p6  '((t :background "#d0f0e8" :foreground "#064" :weight bold)) "Palette 6")
+(defface my/daily-log-face-p7  '((t :background "#f0d8c8" :foreground "#640" :weight bold)) "Palette 7")
+(defface my/daily-log-face-p8  '((t :background "#d8d0e8" :foreground "#406" :weight bold)) "Palette 8")
+(defface my/daily-log-face-p9  '((t :background "#c8e0e8" :foreground "#045" :weight bold)) "Palette 9")
+(defface my/daily-log-face-p10 '((t :background "#e8e8d0" :foreground "#440" :weight bold)) "Palette 10")
 (defface my/daily-log-face-workout
   '((t :background "#f0c0c0" :foreground "#600" :weight bold))
   "Face for Workout in daily log calendar.")
@@ -92,12 +139,21 @@
   '((t :background "#e0e0e0" :weight bold))
   "Face for today's cell in daily log calendar.")
 
-;;; Capture template
+;;; Activity prompt (free-form with completion from tracked list)
+(defun my/daily-log--prompt-activity ()
+  "Prompt for activity name with completion from `my/daily-log-activities'.
+Free-form input is allowed — type anything. Only activities in the
+tracked list appear in calendar/table views."
+  (completing-read "Activity: "
+                   (mapcar #'car my/daily-log-activities)
+                   nil nil))  ; nil = no require-match, free-form OK
+
+;;; Capture template (uses %(sexp) for dynamic prompt)
 (with-eval-after-load 'org
   (require 'org-capture)
   (add-to-list 'org-capture-templates
                '("d" "Daily log" entry (file+datetree "~/org/daily-log.org")
-                 "* %^{Activity|Workout|Reading|Medication|Diet}\n%?")))
+                 "* %(my/daily-log--prompt-activity)\n%?")))
 
 ;;; Calendar view
 
@@ -147,15 +203,16 @@
 (defun my/daily-log--subtree-body-text (end)
   "Return compact body text from point through END, before child headings."
   (let ((start (line-beginning-position 2)))
-    (save-excursion
-      (goto-char start)
-      (let ((body-end (or (and (re-search-forward "^\\*+ " end t)
-                               (match-beginning 0))
-                          end)))
+    (when (< start end)
+      (save-excursion
+        (goto-char start)
+        (let ((body-end (or (and (re-search-forward "^\\*+ " end t)
+                                 (match-beginning 0))
+                            end)))
         (string-trim
          (replace-regexp-in-string
           "[ \t\n]+" " "
-          (buffer-substring-no-properties start body-end)))))))
+          (buffer-substring-no-properties start body-end))))))))
 
 (defun my/daily-log--put-activity (activities activity detail)
   "Add ACTIVITY and DETAIL to ACTIVITIES, appending repeats on the same day."
@@ -179,17 +236,21 @@
         (insert-file-contents my/daily-log--data-file)
         (goto-char (point-min))
         (while (re-search-forward "^\\*\\*\\* \\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\)" nil t)
-          (let ((date (match-string 1))
-                (date-end (save-excursion (org-end-of-subtree)))
-                (activities nil))
+          (let* ((date (match-string 1))
+                 (date-end (save-excursion
+                             (let ((here (point)))
+                               (max here (org-end-of-subtree)))))
+                 (activities nil))
             (while (re-search-forward "^\\*\\*\\*\\* \\(.+\\)$" date-end t)
               (let* ((parsed (my/daily-log--heading-activity (match-string 1)))
                      (activity (car parsed))
                      (heading-detail (cdr parsed))
                      (body-detail (my/daily-log--subtree-body-text date-end))
-                     (detail (if (string-empty-p body-detail)
-                                 heading-detail
-                               body-detail)))
+                     (detail (cond
+                              ((and body-detail (not (string-empty-p body-detail)))
+                               body-detail)
+                              (heading-detail heading-detail)
+                              (t ""))))
                 (when activity
                   (setq activities
                         (my/daily-log--put-activity activities activity detail)))))
@@ -208,15 +269,21 @@
   "Return non-nil when ACTIVITY exists in ACTIVITIES alist."
   (assoc activity activities))
 
+(defun my/daily-log--center (text width)
+  "Return TEXT centered in a field of WIDTH characters."
+  (let* ((len (string-width text))
+         (pad (max 0 (- width len)))
+         (left (/ pad 2))
+         (right (- pad left)))
+    (concat (make-string left ?\s) text (make-string right ?\s))))
+
 (defun my/daily-log--table-cell (detail letter face)
-  "Return propertized table cell text for an activity table cell."
-  (let* ((raw (if (and detail (not (string-empty-p detail))) detail letter))
+  "Return propertized table cell for an activity."
+  (let* ((raw (if (and detail (not (string-empty-p detail))) detail "X"))
          (text (truncate-string-to-width raw my/daily-log-table-cell-width 0 nil "…"))
-         (cell (format (format " %%-%ds " my/daily-log-table-cell-width) text)))
-    (propertize cell
-                'face (if (string= raw letter)
-                          face
-                        `(:inherit ,face)))))
+         (centered (my/daily-log--center text my/daily-log-table-cell-width)))
+    (propertize (format " %s " centered)
+                'face `(:inherit ,face))))
 
 (defun my/daily-log--render-table (start-date range-days &optional buffer)
   "Render a scrollable per-day cross-activity table.
@@ -224,8 +291,8 @@ START-DATE is a time value for the first row.
 RANGE-DAYS is how many days to show (and summary range)."
   (let* ((all-data (my/daily-log--parse-all))
          (names (mapcar #'car my/daily-log-activities))
-         (letters (mapcar #'cadr my/daily-log-activities))
-         (faces (mapcar #'caddr my/daily-log-activities))
+         (letters (mapcar #'my/daily-log--letter my/daily-log-activities))
+         (faces (mapcar #'my/daily-log--face my/daily-log-activities))
          (today-str (format-time-string "%Y-%m-%d"))
          (counts (make-vector (length names) 0))
          (rows nil))
@@ -252,8 +319,8 @@ RANGE-DAYS is how many days to show (and summary range)."
         (erase-buffer)
         ;; --- Legend ---
         (dolist (entry my/daily-log-activities)
-          (insert (propertize (format " %s=%s " (nth 1 entry) (nth 0 entry))
-                              'face `(:inherit ,(nth 2 entry) :weight bold))))
+          (insert (propertize (format " %s=%s " (my/daily-log--letter entry) (nth 0 entry))
+                              'face `(:inherit ,(my/daily-log--face entry) :weight bold))))
         (insert "\n")
         ;; --- Summary count line ---
         (insert (format "Showing %d days from %s.  Summary (last %d days):"
@@ -271,8 +338,9 @@ RANGE-DAYS is how many days to show (and summary range)."
         ;; --- Table header ---
         (insert (format "  %-14s " "Date"))
         (dotimes (i (length names))
-          (insert (propertize (format (format " %%-%ds " my/daily-log-table-cell-width)
-                                      (nth i names))
+          (insert (propertize (format " %s "
+                                      (my/daily-log--center (nth i names)
+                                                            my/daily-log-table-cell-width))
                               'face `(:inherit ,(nth i faces) :weight bold))))
         (insert "\n")
         (insert (format "  %s" (make-string 14 ?─)))
@@ -295,8 +363,9 @@ RANGE-DAYS is how many days to show (and summary range)."
                     (face (nth i faces)))
                 (if-let ((act (my/daily-log--activity-present-p act-name acts)))
                     (insert (my/daily-log--table-cell (cdr act) letter face))
-                  (insert (format (format " %%-%ds " my/daily-log-table-cell-width)
-                                  ".")))))
+                  (insert (format " %s "
+                                  (my/daily-log--center "."
+                                                        my/daily-log-table-cell-width))))))
             (insert "\n")))
         ;; --- Help line ---
         (insert (format "\n%s\n"
@@ -320,8 +389,8 @@ RANGE-DAYS is how many days to show (and summary range)."
   "Render the daily log calendar for ACTIVITY in MONTH/YEAR."
   (let* ((dates (my/daily-log--parse-dates activity))
          (entry (my/daily-log--activity-by-name activity))
-         (letter (nth 1 entry))
-         (face (nth 2 entry))
+         (letter (my/daily-log--letter entry))
+         (face (my/daily-log--face entry))
          (today-str (format-time-string "%Y-%m-%d"))
          (today-decoded (decode-time))
          (today-day (decoded-time-day today-decoded))
