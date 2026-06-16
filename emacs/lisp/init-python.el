@@ -14,6 +14,28 @@
           (css "https://github.com/tree-sitter/tree-sitter-css")
           (json "https://github.com/tree-sitter/tree-sitter-json"))))
 
+(defun my/python-setup-completion ()
+  "Use lightweight Python completion without a language server."
+  (setq-local completion-at-point-functions
+              (list #'python-completion-at-point
+                    #'cape-keyword
+                    #'cape-dabbrev
+                    #'cape-file)))
+
+(defun my-python-run ()
+  "Save and run the current Python file with unbuffered output."
+  (interactive)
+  (unless (buffer-file-name)
+    (user-error "Current buffer is not visiting a file"))
+  (save-buffer)
+  (let ((py (or (executable-find "python3")
+                (executable-find "python")
+                "python3")))
+    (let ((compilation-read-command nil))
+      (compile (format "%s -u %s"
+                       (shell-quote-argument py)
+                       (shell-quote-argument (buffer-file-name)))))))
+
 ;;; Python mode configuration
 (use-package python
   :ensure nil
@@ -25,20 +47,16 @@
   ;; Remap python-mode to python-ts-mode
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
   :bind (:map python-base-mode-map
-              ("<f5>" . my-python-run))
+              ("<f3>" . my-python-run))
   :config
-  (defun my-python-run ()
-    "Save and run the current python file."
-    (interactive)
-    (when (derived-mode-p 'python-base-mode)
-      (save-buffer)
-      (let ((py (or (executable-find "python3")
-                    (executable-find "python")
-                    "python3")))
-        (compile (format "%s %s" py (shell-quote-argument (buffer-file-name)))))))
-
-  (add-hook 'python-mode-hook #'superword-mode)
+  (add-hook 'python-base-mode-hook #'superword-mode)
+  (add-hook 'python-base-mode-hook #'my/python-setup-completion)
   (electric-indent-local-mode 1))
+
+;;; Python syntax checking with Ruff through Flymake
+(use-package flymake-ruff
+  :hook ((python-base-mode . flymake-ruff-load)
+         (python-base-mode . flymake-mode)))
 
 ;;; Custom Python utilities
 
@@ -133,14 +151,14 @@
 ;;; Keybindings
 
 (with-eval-after-load 'python
-  (define-key python-mode-map (kbd "C-c C-p") 'my/run-python-keep-focus)
-  (define-key python-mode-map (kbd "C-c l") 'my/python-send-current-line)
-  (define-key python-mode-map (kbd "C-c b") 'my/python-send-cell)
-  (define-key python-mode-map (kbd "C-c a") 'my/python-send-buffer))
+  (define-key python-base-mode-map (kbd "C-c C-p") 'my/run-python-keep-focus)
+  (define-key python-base-mode-map (kbd "C-c l") 'my/python-send-current-line)
+  (define-key python-base-mode-map (kbd "C-c b") 'my/python-send-cell)
+  (define-key python-base-mode-map (kbd "C-c a") 'my/python-send-buffer))
 
 (with-eval-after-load 'evil
   (with-eval-after-load 'python
-    (evil-define-key 'normal python-mode-map
+    (evil-define-key 'normal python-base-mode-map
       (kbd "<leader>l") 'my/python-send-current-line
       (kbd "<leader>b") 'my/python-send-cell
       (kbd "<leader>a") 'my/python-send-buffer)))

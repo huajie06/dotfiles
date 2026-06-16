@@ -41,6 +41,12 @@
   (setq display-fill-column-indicator-column 80)
 
   :config
+  ;; GUI Emacs on Linux may not inherit the interactive shell PATH.
+  (let ((local-bin (expand-file-name "~/.local/bin")))
+    (when (file-directory-p local-bin)
+      (add-to-list 'exec-path local-bin)
+      (setenv "PATH" (concat local-bin path-separator (getenv "PATH")))))
+
   (auto-save-visited-mode 1)
   (global-hl-line-mode -1)
   (show-paren-mode t)
