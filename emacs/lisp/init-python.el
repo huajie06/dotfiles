@@ -1,4 +1,4 @@
-;;; init-python.el --- Python tree-sitter, shell, and custom utilities
+;;; init-python.el --- Python tree-sitter, shell, and custom utilities  -*- lexical-binding: t -*-
 
 (require 'python)
 
@@ -22,19 +22,53 @@
                     #'cape-dabbrev
                     #'cape-file)))
 
+(defun my/python-project-root ()
+  "Return the current project root, or the current file's directory."
+  (or (when (and (bound-and-true-p projectile-mode)
+                 (fboundp 'projectile-project-root))
+        (ignore-errors (projectile-project-root)))
+      (when-let ((project (project-current)))
+        (project-root project))
+      (when-let ((file (buffer-file-name)))
+        (file-name-directory file))))
+
+(defun my/python-venv-executable (venv-dir)
+  "Return the Python executable inside VENV-DIR."
+  (expand-file-name
+   (if (eq system-type 'windows-nt)
+       "Scripts/python.exe"
+     "bin/python")
+   venv-dir))
+
+(defun my/python-find-venv-python (project-root)
+  "Return the first Python executable found in PROJECT-ROOT venvs."
+  (seq-find #'file-executable-p
+            (mapcar (lambda (dir)
+                      (my/python-venv-executable
+                       (expand-file-name dir project-root)))
+                    '(".venv" "venv" "env" ".env"))))
+
+(defun my/python-find-runner ()
+  "Return the Python executable for running the current buffer."
+  (or (when-let ((project-root (my/python-project-root)))
+        (my/python-find-venv-python project-root))
+      (seq-find #'file-executable-p '("/usr/bin/python3" "/usr/bin/python"))
+      (executable-find "python3")
+      (executable-find "python")
+      "python3"))
+
 (defun my-python-run ()
   "Save and run the current Python file with unbuffered output."
   (interactive)
   (unless (buffer-file-name)
     (user-error "Current buffer is not visiting a file"))
   (save-buffer)
-  (let ((py (or (executable-find "python3")
-                (executable-find "python")
-                "python3")))
-    (let ((compilation-read-command nil))
-      (compile (format "%s -u %s"
-                       (shell-quote-argument py)
-                       (shell-quote-argument (buffer-file-name)))))))
+  (let* ((py (my/python-find-runner))
+         (fname (file-name-nondirectory (buffer-file-name)))
+         (command (format "%s -u %s"
+                          (shell-quote-argument py)
+                          (shell-quote-argument (buffer-file-name)))))
+    (async-shell-command command (format "*python-run %s*" fname))))
 
 ;;; Python mode configuration
 (use-package python
@@ -51,6 +85,9 @@
   :config
   (add-hook 'python-base-mode-hook #'superword-mode)
   (add-hook 'python-base-mode-hook #'my/python-setup-completion)
+  (add-hook 'python-base-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'my/ruff-format nil 'make-local)))
   (electric-indent-local-mode 1))
 
 ;;; Python syntax checking with Ruff through Flymake
@@ -59,6 +96,25 @@
          (python-base-mode . flymake-mode)))
 
 ;;; Custom Python utilities
+
+(defun my/ruff-format ()
+  "Format the current buffer with ruff.
+Formats in a temp buffer first, then copies back only on success."
+  (interactive)
+  (when-let ((ruff (executable-find "ruff")))
+    (let ((orig (current-buffer))
+          (start (point-min))
+          (end (point-max)))
+      (with-temp-buffer
+        (insert-buffer-substring orig start end)
+        (let ((exit (call-process-region (point-min) (point-max) ruff t t nil
+                                         "format" "--quiet" "-")))
+          (if (zerop exit)
+              (let ((formatted (buffer-string)))
+                (with-current-buffer orig
+                  (delete-region start end)
+                  (insert formatted)))
+            (error "ruff format failed with exit code %d" exit)))))))
 
 (defun my/set-python-interpreter ()
   "Search for venvs, prompt user, isolate process."

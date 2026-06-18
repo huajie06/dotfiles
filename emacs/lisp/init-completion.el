@@ -8,6 +8,8 @@
   (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-quit-no-match 'separator)
+  (corfu-show-numbers t)
+  (corfu-show-labels nil)
   :init
   (global-corfu-mode)
   :bind (:map corfu-map
@@ -15,7 +17,8 @@
               ("TAB" . corfu-insert)
               ("<tab>" . corfu-insert)
               ("C-n" . corfu-next)
-              ("C-p" . corfu-previous))
+              ("C-p" . corfu-previous)
+              ("C-q" . corfu-quick-insert))
   :config
   ;; Evil integration — defer until evil is loaded
   (with-eval-after-load 'evil
@@ -29,7 +32,13 @@
   (setq cape-dabbrev-check-other-buffers t)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-file)
-  (add-hook 'completion-at-point-functions #'cape-keyword))
+  (add-hook 'completion-at-point-functions #'cape-keyword)
+  :config
+  ;; Remove the " Dabbrev" annotation from the popup
+  (setq cape--dabbrev-properties
+        (list :company-kind (lambda (_) 'text)
+              :exclusive 'no
+              :category 'cape-dabbrev)))
 
 ;;; Vertico — vertical minibuffer completion
 (use-package vertico

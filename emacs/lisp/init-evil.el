@@ -36,7 +36,10 @@
 
   ;; Org-mode specific evil keys
   (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
-  (evil-define-key 'normal org-mode-map (kbd "TAB") #'org-cycle))
+  (evil-define-key 'normal org-mode-map (kbd "TAB") #'org-cycle)
+
+  ;; Shell buffers (async-shell-command, M-x shell) start in normal mode
+  (evil-set-initial-state 'shell-mode 'normal))
 
 (use-package evil-collection
   :after evil

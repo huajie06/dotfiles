@@ -1,57 +1,53 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Guidance for OpenCode sessions working in this repo.
 
-## Repository overview
+## Overview
 
-Personal dotfiles — primarily an Emacs configuration with Evil (vim) keybindings, plus a VSCode settings backup. The Emacs config targets Python data science workflows, Org mode (notes, LeetCode tracking, clocking), and ibuffer-based buffer management. Targets Emacs 30.2.
+Personal dotfiles — Emacs 30.2 config with Evil (vim) keybindings, plus a VSCode settings backup. Targets Python data science, Org mode, and ibuffer-based buffer management.
 
-## Deploying changes
+## Source of truth
 
-Two modes are supported:
+The repo is the source of truth. Edit files here, not under `~/.emacs.d/`.
 
-**A. Load directly from the repo (primary workflow)**
+**Two deploy modes:**
 
-`~/.emacs.d/init.el` contains a single form: `(load "~/repos/dotfiles/emacs/init.el")`. The repo's `init.el` then resolves its own directory, explicitly loads `early-init.el`, and requires all modules. No copy step needed.
+- **A (primary)** — `~/.emacs.d/init.el` contains `(load "~/repos/dotfiles/emacs/init.el")`. Everything resolves from the repo path. No copy step.
+- **B** — `bash emacs/move_files.sh` copies to `~/.emacs.d/` with a dated backup under `~/.emacs.d.bak/`.
 
-**B. Copy to `~/.emacs.d/`**
+## Emacs architecture
 
-```bash
-bash emacs/move_files.sh
-```
+`emacs/init.el` resolves its own directory, loads `early-init.el` explicitly, adds `lisp/` to `load-path`, then `require`s modules in this dependency order:
 
-Creates a dated backup under `~/.emacs.d.bak/` before deploying. In this mode Emacs auto-discovers `early-init.el`.
+| File | Purpose |
+|---|---|
+| `init-core.el` | MELPA, `use-package`, general settings (backups, auto-save, parens, electric modes, line numbers, hooks) |
+| `init-ui.el` | Doom modeline |
+| `init-tools.el` | Magit, Projectile, TRAMP, anzu, markdown-mode, aggressive-indent, indent-bars, ibuffer/ibuffer-project |
+| `init-completion.el` | Corfu/Cape (in-buffer), Vertico/Orderless/Marginalia/Consult/Embark (minibuffer) |
+| `init-evil.el` | Evil, evil-collection, evil-surround, evil-anzu, undo-fu/undo-fu-session/vundo |
+| `init-python.el` | Tree-sitter grammars, `python-ts-mode` remap, `# %%` cell nav, venv detection, REPL |
+| `init-org.el` | Org capture, babel, org-tempo, org-download, clocking |
+| `init-daily-log.el` | Activity capture into `~/org/daily-log.org` + color-coded calendar/table views |
 
-The repo is the source of truth in both cases; edits should be made here.
+Disable any module by commenting out its `require` in `init.el`.
 
-## Emacs configuration architecture
+## Key conventions
 
-The config is split into modular, topic-based files loaded in dependency order. See `emacs/README.md` for the full rationale.
+- **No `custom-file`**: all settings are explicit `setq` inside `use-package` blocks. Nothing writes to `custom-set-variables`.
+- **Python mode**: remapped via `major-mode-remap-alist` (`python-mode` → `python-ts-mode`), not by patching `auto-mode-alist`.
+- **Evil keybindings**: use `evil-define-key` inside nested `with-eval-after-load 'evil ... with-eval-after-load '<package>` so deferred loading doesn't break them.
+- **Cross-platform**: Python/venv paths use `system-type` checks and `executable-find` fallbacks.
+- **`early-init.el`**: loaded explicitly by `init.el` (not auto-discovered). An `emacs-startup-hook` fallback switches to `*scratch*` after init.
 
-**Entry points:**
-- **`emacs/early-init.el`** — Startup settings (inhibit startup screen, `*scratch*` buffer), frame geometry, UI chrome, theme. Loaded explicitly by `init.el` so it works in deployment mode A.
-- **`emacs/init.el`** — Resolves `my-config-path` from its own file location, loads `early-init.el`, adds `lisp/` to `load-path`, then `require`s each module in dependency order.
+## Known issues
 
-**Modules in `emacs/lisp/` (loaded in this order):**
-- `init-core.el` — Package archives (MELPA), `use-package` config, general Emacs settings (backups, auto-save, paren matching, electric modes, line numbers, auto-revert, hooks).
-- `init-ui.el` — Doom modeline configuration.
-- `init-tools.el` — Magit, Projectile, TRAMP, Anzu, markdown-mode, aggressive-indent, indent-bars, ibuffer/ibuffer-project.
-- `init-completion.el` — Corfu (in-buffer popup), Cape (backends), Vertico/Orderless/Marginalia (minibuffer), Consult, Embark.
-- `init-evil.el` — Evil mode, evil-collection, evil-surround, evil-anzu, plus the undo stack (undo-fu, undo-fu-session, vundo).
-- `init-python.el` — Tree-sitter grammars, `python-ts-mode` remap, Python shell, `# %%` cell navigation, venv detection, REPL keybindings.
-- `init-org.el` — Org mode with capture templates, babel, org-tempo, org-download, clock summary dynamic block.
-- `init-daily-log.el` — Daily activity logging via org-capture into `~/org/daily-log.org`, with a per-activity color-coded month calendar view (`C-c v`).
+- **`avy` not declared as dependency**: `init-evil.el` binds `SPC` to `avy-goto-char-2`, but there's no `(use-package avy ...)` anywhere. Will error on a clean install if `avy` wasn't pulled in transitively.
+- **`<leader>` keybindings broken**: `init-python.el` binds `<leader>l`/`<leader>b`/`<leader>a` via `evil-define-key`, but these require `evil-leader` (not installed). Bindings silently do nothing.
 
-**Other files:**
-- `emacs/README.md` — Detailed architecture docs, load order rationale, design conventions.
-- `emacs/test/` — Ad-hoc scripts and experiments, not loaded by Emacs.
-- `emacs/notes/dired-evil.md` — Personal cheatsheet for Dired + Evil, not loaded by Emacs.
-- `vscode/settings.json` — Backed-up VSCode settings. Not deployed by the shell script.
+## Reference
 
-## Key design patterns
-
-- **No `custom-set-variables` or `custom-file`**: all settings are explicit `setq` calls inside `use-package` blocks.
-- **Python mode remapping**: `python-mode` is remapped to `python-ts-mode` via `major-mode-remap-alist`, not by hacking `auto-mode-alist`.
-- **Evil keybinding convention**: packages that need Evil integration use `evil-define-key` inside nested `with-eval-after-load 'evil ... with-eval-after-load '<package>` to ensure both are loaded.
-- **Module isolation**: each `lisp/init-*.el` is self-contained and can be disabled by commenting out its `require` in `init.el`. Dependencies between modules are documented by load order.
-- **Cross-platform**: Python executable and venv paths use OS-aware logic (`system-type` check, `executable-find` fallback). All path operations use Emacs's `expand-file-name` which handles platform separators natively.
+- `emacs/README.md` — full architecture rationale, load order details, daily-log docs, and more known issues.
+- `vscode/settings.json` — backed up VSCode config (not deployed by `move_files.sh`).
+- `emacs/test/` and `emacs/notes/` — not loaded by Emacs.
+- `.gitignore` ignores `*.elc`, `*~`, `#*#`, `.DS_Store`, and `eln-cache/`.
