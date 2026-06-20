@@ -85,6 +85,7 @@
   :config
   (add-hook 'python-base-mode-hook #'superword-mode)
   (add-hook 'python-base-mode-hook #'my/python-setup-completion)
+
   (add-hook 'python-base-mode-hook
             (lambda ()
               (add-hook 'before-save-hook #'my/ruff-format nil 'make-local)))
@@ -203,6 +204,14 @@ Formats in a temp buffer first, then copies back only on success."
       (save-selected-window
         (call-interactively 'run-python))
     (call-interactively 'run-python)))
+
+(defun my/python-version ()
+  "Display the Python version that will be used by the shell."
+  (interactive)
+  (let* ((interp (or (and (boundp 'python-shell-interpreter) python-shell-interpreter)
+                     "python3"))
+         (version (shell-command-to-string (format "%s --version" interp))))
+    (message "%s" (string-trim version))))
 
 ;;; Keybindings
 

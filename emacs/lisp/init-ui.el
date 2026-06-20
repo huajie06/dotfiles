@@ -5,7 +5,7 @@
   :custom
   (doom-modeline-height 25)
   (doom-modeline-bar-width 4)
-  (doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  (doom-modeline-buffer-file-name-style 'buffer-name)
   (doom-modeline-icon nil)
   (doom-modeline-major-mode-icon nil)
   (doom-modeline-file-time-icon nil)
@@ -14,7 +14,8 @@
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-indent-info nil)
   (doom-modeline-project-detection 'auto)
-  (doom-modeline-workspace-name t))
+  (doom-modeline-workspace-name t)
+  (doom-modeline-env-version nil))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here
