@@ -50,6 +50,10 @@
   :config
   (global-evil-surround-mode 1))
 
+(use-package evil-commentary
+  :config
+  (evil-commentary-mode))
+
 ;;; Search with Anzu (needs evil-anzu bridge)
 (use-package evil-anzu
   :after (evil anzu))
