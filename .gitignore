@@ -8,5 +8,10 @@
 # macOS
 .DS_Store
 
+# Fish auto-generated
+fish/completions/
+fish/conf.d/
+fish/fish_variables
+
 # Emacs native compilation cache (generated)
 eln-cache/
