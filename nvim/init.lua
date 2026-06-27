@@ -1,5 +1,6 @@
 -- Options
 vim.opt.number = true
+vim.opt.relativenumber = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
@@ -372,5 +373,27 @@ vim.keymap.set("n", "<F5>", function()
     vim.notify("No file to run", vim.log.levels.WARN)
     return
   end
+  vim.cmd("w")
   vim.cmd("!" .. py .. " " .. vim.fn.shellescape(file))
 end, { desc = "Run current Python file" })
+
+-- Ruff format on save for Python files
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = vim.api.nvim_create_augroup("PythonFormat", { clear = true }),
+  pattern = "*.py",
+  callback = function()
+    if vim.fn.executable("ruff") == 0 then return end
+    local view = vim.fn.winsaveview()
+    local buf = vim.api.nvim_get_current_buf()
+    local content = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
+    local formatted = vim.fn.system("ruff format --quiet -", content)
+    if vim.v.shell_error == 0 then
+      local lines = vim.split(formatted, "\n")
+      if #lines > 0 and lines[#lines] == "" then
+        table.remove(lines)
+      end
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+      vim.fn.winrestview(view)
+    end
+  end,
+})
