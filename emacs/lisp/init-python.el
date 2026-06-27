@@ -111,10 +111,9 @@ Formats in a temp buffer first, then copies back only on success."
         (let ((exit (call-process-region (point-min) (point-max) ruff t t nil
                                          "format" "--quiet" "-")))
           (if (zerop exit)
-              (let ((formatted (buffer-string)))
+              (let ((temp (current-buffer)))
                 (with-current-buffer orig
-                  (delete-region start end)
-                  (insert formatted)))
+                  (replace-buffer-contents temp)))
             (error "ruff format failed with exit code %d" exit)))))))
 
 (defun my/set-python-interpreter ()
