@@ -13,6 +13,8 @@ vim.opt.smartcase = true
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 vim.opt.clipboard = "unnamedplus"
+vim.opt.colorcolumn = "80"
+vim.opt.signcolumn = "yes"
 
 vim.g.mapleader = " "
 
@@ -257,6 +259,24 @@ require("lazy").setup({
     },
   },
 
+  -- Neogit — git porcelain in a buffer
+  {
+    "NeogitOrg/neogit",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "sindrets/diffview.nvim",  -- optional: enhanced diff/log views
+    },
+    cmd = "Neogit",
+    keys = {
+      { "<leader>gg", "<cmd>Neogit<CR>",               desc = "Neogit status" },
+      { "<leader>gc", "<cmd>Neogit commit<CR>",        desc = "Neogit commit" },
+      { "<leader>gl", "<cmd>Neogit log<CR>",           desc = "Neogit log" },
+      { "<leader>gp", "<cmd>Neogit pull<CR>",          desc = "Neogit pull" },
+      { "<leader>gP", "<cmd>Neogit push<CR>",          desc = "Neogit push" },
+    },
+    opts = {},
+  },
+
   -- Comments
   {
     "numToStr/Comment.nvim",
@@ -264,6 +284,13 @@ require("lazy").setup({
       { "gc", mode = { "n", "v" }, desc = "Comment toggle line" },
       { "gb", mode = { "n", "v" }, desc = "Comment toggle block" },
     },
+    opts = {},
+  },
+
+  -- Markdown render (inline)
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "md" },
     opts = {},
   },
 
