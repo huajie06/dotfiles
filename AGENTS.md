@@ -45,6 +45,10 @@ Disable any module by commenting out its `require` in `init.el`.
 - **`avy` not declared as dependency**: `init-evil.el` binds `SPC` to `avy-goto-char-2`, but there's no `(use-package avy ...)` anywhere. Will error on a clean install if `avy` wasn't pulled in transitively.
 - **`<leader>` keybindings broken**: `init-python.el` binds `<leader>l`/`<leader>b`/`<leader>a` via `evil-define-key`, but these require `evil-leader` (not installed). Bindings silently do nothing.
 
+## Tmux config
+
+`tmux/tmux.conf` — deployed to `~/.config/tmux/tmux.conf` via `bash tmux/deploy.sh` (backs up existing first).
+
 ## Reference
 
 - `emacs/README.md` — full architecture rationale, load order details, daily-log docs, and more known issues.
