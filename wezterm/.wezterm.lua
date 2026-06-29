@@ -4,7 +4,7 @@ return {
     { family = 'JetBrains Mono', weight = 'Medium' },
     { family = 'DejaVuSansM Nerd Font Mono', weight = 'Regular' },
   },
-  font_size = 16.0,
+  font_size = 14.0,
   initial_cols = 100,
   initial_rows = 30,
   dpi = 96.0,
