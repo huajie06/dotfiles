@@ -1,9 +1,9 @@
 # Font
 font-family = JetBrains Mono
-font-size = 14
+font-size = 20
 
 # Theme
-theme = tokyo-night
+theme = TokyoNight
 
 # Window
 background-opacity = 0.93
@@ -13,10 +13,11 @@ macos-titlebar-style = tabs
 confirm-close-surface = false
 
 # Cursor
-cursor-style = bar
+cursor-style = block
 cursor-style-blink = true
 
 # Shell
+command = /opt/homebrew/bin/fish
 shell-integration = fish
 
 # Mouse
