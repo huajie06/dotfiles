@@ -78,6 +78,14 @@ return {
   enable_kitty_graphics = true,
   enable_wayland = false,
 
+  mouse_bindings = {
+    {
+      event = { Down = { streak = 1, button = 'Right' } },
+      mods = 'NONE',
+      action = wezterm.action.PasteFrom 'Clipboard',
+    },
+  },
+
   adjust_window_size_when_changing_font_size = false,
   warn_about_missing_glyphs = false,
 }
