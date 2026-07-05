@@ -75,17 +75,22 @@
   :bind (("C-s" . (lambda ()
                     (interactive)
                     (consult-line (and current-prefix-arg
-                                      (thing-at-point 'symbol t)))))
+                                       (thing-at-point 'symbol t)))))
          ("C-x b" . consult-buffer)
          ("C-x C-r" . consult-recent-file)
          ("M-y" . consult-yank-pop)
          ("M-g g" . consult-goto-line)
          ("C-c r" . consult-ripgrep)
-         ("C-c j" . consult-dir)
          :map minibuffer-local-map
          ("C-r" . consult-history))
   :config
   (setq consult-preview-key 'any))
+
+(use-package consult-dir
+  :bind
+  (("C-c j" . consult-dir)
+   :map minibuffer-local-map
+   ("C-c j" . consult-dir)))
 
 ;;; Embark — contextual actions
 (use-package embark
