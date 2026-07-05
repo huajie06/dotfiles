@@ -120,7 +120,10 @@
 
   (setq ibuffer-saved-filter-groups
         '(("default"
-           ("Dired"    (mode . dired-mode))
+           ("Dired"    (or
+                         (mode . dired-mode)
+                         (mode . dirvish-mode)
+                         (mode . dirvish-side-mode)))
            ("Org/Notes" (or
                          (mode . org-mode)
                          (mode . markdown-mode)
@@ -156,6 +159,50 @@
                     (setq ibuffer-filter-groups (ibuffer-project-generate-filter-groups))
                     (unless (eq ibuffer-sorting-mode 'project-file-relative)
                       (ibuffer-do-sort-by-project-file-relative)))))
+
+;;; Dirvish — modern file manager (replaces dired + neotree)
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :bind ("C-c d" . my/dirvish-side)
+  :custom
+  (dirvish-side-width 30)
+  :config
+  (defun my/dirvish-side ()
+    "Toggle dirvish-side with focus management.
+First call opens and focuses the sidebar.  If already focused,
+closes it.  If visible but not focused, focuses it."
+    (interactive)
+    (let ((win (cl-find-if
+                (lambda (w)
+                  (with-current-buffer (window-buffer w)
+                    (derived-mode-p 'dirvish-side-mode)))
+                (window-list))))
+      (if win
+          (if (eq (selected-window) win)
+              (dirvish-side)            ; close sidebar
+            (select-window win))        ; focus sidebar
+        (dirvish-side)                  ; open sidebar
+        (when-let ((new-win (cl-find-if
+                             (lambda (w)
+                               (with-current-buffer (window-buffer w)
+                                 (derived-mode-p 'dirvish-side-mode)))
+                             (window-list))))
+          (select-window new-win)))))
+
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'dirvish-mode 'normal)
+    (evil-set-initial-state 'dirvish-side-mode 'normal)
+    (evil-define-key 'normal dirvish-mode-map
+      (kbd "h") 'dired-up-directory
+      (kbd "l") 'dired-find-file)
+    (evil-define-key 'normal dirvish-side-mode-map
+      (kbd "h") 'dired-up-directory
+      (kbd "l") 'dired-find-file
+      (kbd "q") 'quit-window)))
+
+(use-package consult-dir
+  :bind ("C-c j" . consult-dir))
 
 (provide 'init-tools)
 ;;; init-tools.el ends here
