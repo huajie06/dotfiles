@@ -20,6 +20,7 @@
 (require 'init-tools)      ;; magit, projectile, tramp, anzu, ibuffer
 (require 'init-completion) ;; corfu, cape, vertico, consult, embark
 (require 'init-evil)       ;; evil, evil-collection, evil-surround
+(require 'init-dirvish)    ;; dirvish (optional — comment to disable)
 (require 'init-python)     ;; python + tree-sitter
 (require 'init-org)        ;; org-mode
 (require 'init-daily-log) ;; daily activity capture + calendar view

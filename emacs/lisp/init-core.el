@@ -42,7 +42,8 @@
 
   :config
   ;; Keep the default font family, but use a larger size.
-  (set-face-attribute 'default nil :height 200)
+  (when (eq system-type 'darwin)
+    (set-face-attribute 'default nil :height 200))
 
   ;; GUI Emacs on Linux may not inherit the interactive shell PATH.
   (let ((local-bin (expand-file-name "~/.local/bin")))

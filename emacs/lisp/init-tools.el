@@ -38,41 +38,6 @@
   :config
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
-;;; Dirvish — enhanced Dired file manager
-(use-package nerd-icons)
-
-(defun my/dirvish-side-toggle ()
-  "Show Dirvish Side when hidden, or hide it when visible."
-  (interactive)
-  (require 'dirvish-side)
-  (let ((window (dirvish-side--session-visible-p)))
-    (if window
-        (with-selected-window window
-          (dirvish-side))
-      (dirvish-side))))
-
-(defun my/dirvish-side-disable-line-numbers ()
-  "Disable line numbers in Dirvish Side."
-  (when-let ((session (dirvish-curr)))
-    (when (eq (dv-type session) 'side)
-      (display-line-numbers-mode -1))))
-
-(use-package dirvish
-  :init
-  (dirvish-override-dired-mode)
-  :bind
-  ("C-c d" . my/dirvish-side-toggle)
-  :custom
-  (dirvish-side-window-parameters
-   '((no-delete-other-windows . t)))
-  (dirvish-attributes
-   '(vc-state subtree-state nerd-icons collapse file-time file-size))
-  (dirvish-mode-line-format
-   '(:left (sort symlink) :right (omit yank index)))
-  :config
-  (add-hook 'dirvish-setup-hook
-            #'my/dirvish-side-disable-line-numbers))
-
 ;;; Markdown
 (use-package markdown-mode
   :mode ("README\\.md\\'" . gfm-mode)
@@ -159,47 +124,6 @@
                     (setq ibuffer-filter-groups (ibuffer-project-generate-filter-groups))
                     (unless (eq ibuffer-sorting-mode 'project-file-relative)
                       (ibuffer-do-sort-by-project-file-relative)))))
-
-;;; Dirvish — modern file manager (replaces dired + neotree)
-(use-package dirvish
-  :init
-  (dirvish-override-dired-mode)
-  :bind ("C-c d" . my/dirvish-side)
-  :custom
-  (dirvish-side-width 30)
-  :config
-  (defun my/dirvish-side ()
-    "Toggle dirvish-side with focus management.
-First call opens and focuses the sidebar.  If already focused,
-closes it.  If visible but not focused, focuses it."
-    (interactive)
-    (let ((win (cl-find-if
-                (lambda (w)
-                  (with-current-buffer (window-buffer w)
-                    (derived-mode-p 'dirvish-side-mode)))
-                (window-list))))
-      (if win
-          (if (eq (selected-window) win)
-              (dirvish-side)            ; close sidebar
-            (select-window win))        ; focus sidebar
-        (dirvish-side)                  ; open sidebar
-        (when-let ((new-win (cl-find-if
-                             (lambda (w)
-                               (with-current-buffer (window-buffer w)
-                                 (derived-mode-p 'dirvish-side-mode)))
-                             (window-list))))
-          (select-window new-win)))))
-
-  (with-eval-after-load 'evil
-    (evil-set-initial-state 'dirvish-mode 'normal)
-    (evil-set-initial-state 'dirvish-side-mode 'normal)
-    (evil-define-key 'normal dirvish-mode-map
-      (kbd "h") 'dired-up-directory
-      (kbd "l") 'dired-find-file)
-    (evil-define-key 'normal dirvish-side-mode-map
-      (kbd "h") 'dired-up-directory
-      (kbd "l") 'dired-find-file
-      (kbd "q") 'quit-window)))
 
 (use-package consult-dir
   :bind ("C-c j" . consult-dir))
