@@ -41,6 +41,9 @@
   (setq display-fill-column-indicator-column 80)
 
   :config
+  ;; Keep the default font family, but use a larger size.
+  (set-face-attribute 'default nil :height 200)
+
   ;; GUI Emacs on Linux may not inherit the interactive shell PATH.
   (let ((local-bin (expand-file-name "~/.local/bin")))
     (when (file-directory-p local-bin)
@@ -54,7 +57,7 @@
   (electric-pair-mode 1)
   (electric-indent-mode 1)
   (setq display-line-numbers-type 'relative
-        display-line-numbers-width 3
+        display-line-numbers-width 4
         display-line-numbers-grow-only t)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)

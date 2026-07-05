@@ -23,8 +23,5 @@
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)
 
-;; Load theme early to avoid flash of default theme
-(load-theme 'modus-operandi t)
-
 (provide 'early-init)
 ;;; early-init.el ends here

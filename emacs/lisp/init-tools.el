@@ -38,6 +38,41 @@
   :config
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
+;;; Dirvish — enhanced Dired file manager
+(use-package nerd-icons)
+
+(defun my/dirvish-side-toggle ()
+  "Show Dirvish Side when hidden, or hide it when visible."
+  (interactive)
+  (require 'dirvish-side)
+  (let ((window (dirvish-side--session-visible-p)))
+    (if window
+        (with-selected-window window
+          (dirvish-side))
+      (dirvish-side))))
+
+(defun my/dirvish-side-disable-line-numbers ()
+  "Disable line numbers in Dirvish Side."
+  (when-let ((session (dirvish-curr)))
+    (when (eq (dv-type session) 'side)
+      (display-line-numbers-mode -1))))
+
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :bind
+  ("C-c d" . my/dirvish-side-toggle)
+  :custom
+  (dirvish-side-window-parameters
+   '((no-delete-other-windows . t)))
+  (dirvish-attributes
+   '(vc-state subtree-state nerd-icons collapse file-time file-size))
+  (dirvish-mode-line-format
+   '(:left (sort symlink) :right (omit yank index)))
+  :config
+  (add-hook 'dirvish-setup-hook
+            #'my/dirvish-side-disable-line-numbers))
+
 ;;; Markdown
 (use-package markdown-mode
   :mode ("README\\.md\\'" . gfm-mode)

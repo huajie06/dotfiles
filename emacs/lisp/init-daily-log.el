@@ -23,11 +23,7 @@
 ;; Only tracked activities appear in views; anything else captured is
 ;; stored but hidden until added to the list.
 ;;
-;; Three entry points (global keybindings):
-;;
-;;   C-c d — capture: free-form completing-read (suggestions from the
-;;           tracked list).  Point lands below the new heading for
-;;           optional multiline body text.  C-c C-c to finish.
+;; Two entry points (global keybindings):
 ;;
 ;;   C-c v — calendar: per-activity month grid.  Day numbers are
 ;;           color-coded with a background face.  Today is highlighted.
@@ -740,7 +736,6 @@ Default window: current month, then +/- to expand."
                                 my/daily-log--range-days (current-buffer))))
 
 ;;; Global keybindings
-(global-set-key (kbd "C-c d") (lambda () (interactive) (org-capture nil "d")))
 (global-set-key (kbd "C-c v") #'my/daily-log)
 (global-set-key (kbd "C-c t") #'my/daily-log-table)
 

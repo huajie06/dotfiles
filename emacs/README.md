@@ -65,7 +65,7 @@ Capture daily activities (workout, reading, medication, diet) into `~/org/daily-
 
 ### Capturing entries
 
-`C-c d` runs a capture template that prompts for an activity and files the entry under today's date in a datetree:
+Run `C-c c`, then choose `d` to capture an activity under today's date in a datetree:
 
 ```
 * 2026

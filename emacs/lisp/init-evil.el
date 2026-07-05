@@ -46,6 +46,17 @@
   :config
   (evil-collection-init '(magit dired wdired ibuffer)))
 
+;;; Dirvish keeps Dired commands, with Vim-style navigation
+(with-eval-after-load 'evil
+  (with-eval-after-load 'dirvish
+    (evil-define-key 'normal dirvish-mode-map
+      (kbd "h") #'dired-up-directory
+      (kbd "l") #'dired-find-file
+      (kbd "RET") #'dired-find-file
+      (kbd "q") #'dirvish-quit
+      (kbd "?") #'dirvish-dispatch
+      (kbd "TAB") #'dirvish-subtree-toggle)))
+
 (use-package evil-surround
   :config
   (global-evil-surround-mode 1))
