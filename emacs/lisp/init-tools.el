@@ -125,8 +125,5 @@
                     (unless (eq ibuffer-sorting-mode 'project-file-relative)
                       (ibuffer-do-sort-by-project-file-relative)))))
 
-(use-package consult-dir
-  :bind ("C-c j" . consult-dir))
-
 (provide 'init-tools)
 ;;; init-tools.el ends here

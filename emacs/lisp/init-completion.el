@@ -72,12 +72,16 @@
 
 ;;; Consult — enhanced commands
 (use-package consult
-  :bind (("C-s" . consult-line)
+  :bind (("C-s" . (lambda ()
+                    (interactive)
+                    (consult-line (and current-prefix-arg
+                                      (thing-at-point 'symbol t)))))
          ("C-x b" . consult-buffer)
          ("C-x C-r" . consult-recent-file)
          ("M-y" . consult-yank-pop)
          ("M-g g" . consult-goto-line)
          ("C-c r" . consult-ripgrep)
+         ("C-c j" . consult-dir)
          :map minibuffer-local-map
          ("C-r" . consult-history))
   :config
