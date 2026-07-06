@@ -69,5 +69,21 @@
 (use-package evil-anzu
   :after (evil anzu))
 
+;;; Text objects that treat _ as part of a word
+;; Uses evil-symbol motion (which includes _) instead of evil-word.
+;; Replaces superword-mode which conflicted with tree-sitter.
+(evil-define-text-object my/evil-inner-word (count &optional beginning end type)
+  "Inner word, treating _ as word constituent."
+  :type word
+  (evil-select-an-object 'evil-symbol beginning end type count))
+
+(evil-define-text-object my/evil-a-word (count &optional beginning end type)
+  "A word, treating _ as word constituent."
+  :type word
+  (evil-select-an-object 'evil-symbol beginning end type count t))
+
+(define-key evil-inner-text-objects-map "w" 'my/evil-inner-word)
+(define-key evil-outer-text-objects-map "w" 'my/evil-a-word)
+
 (provide 'init-evil)
 ;;; init-evil.el ends here

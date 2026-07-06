@@ -83,7 +83,6 @@
   :bind (:map python-base-mode-map
               ("<f5>" . my-python-run))
   :config
-  (add-hook 'python-base-mode-hook #'superword-mode)
   (add-hook 'python-base-mode-hook #'my/python-setup-completion)
 
   (add-hook 'python-base-mode-hook
