@@ -81,7 +81,7 @@
   ;; Remap python-mode to python-ts-mode
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
   :bind (:map python-base-mode-map
-              ("<f3>" . my-python-run))
+              ("<f5>" . my-python-run))
   :config
   (add-hook 'python-base-mode-hook #'superword-mode)
   (add-hook 'python-base-mode-hook #'my/python-setup-completion)
