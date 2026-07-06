@@ -115,6 +115,14 @@ Then open Dirvish side in the current frame and focus it."
   (add-hook 'dirvish-setup-hook
             #'my/dirvish-disable-line-numbers)
 
+  ;; config sort
+  (if (and (eq system-type 'darwin)
+           (executable-find "gls"))
+      (progn
+        (setq insert-directory-program "gls")
+        (setq dired-listing-switches "-alh --group-directories-first --sort=name"))
+    (setq dired-listing-switches "-alh --group-directories-first --sort=name"))
+
   (with-eval-after-load 'evil
     ;; Start Dirvish in Evil normal state.
     (evil-set-initial-state 'dirvish-mode 'normal)
