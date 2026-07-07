@@ -57,9 +57,9 @@
   (global-eldoc-mode -1)
   (electric-pair-mode 1)
   (electric-indent-mode 1)
-  (setq display-line-numbers-type 'relative
-        display-line-numbers-width 4
-        display-line-numbers-grow-only t)
+  ;; (setq display-line-numbers-type 'relative
+  ;;       display-line-numbers-width 4
+  ;;       display-line-numbers-grow-only t)
   (global-display-line-numbers-mode t)
   (global-auto-revert-mode 1)
 

@@ -28,15 +28,16 @@ Creates a dated backup under `~/.emacs.d.bak/` before deploying. In this mode Em
 
 ```
 emacs/
-├── early-init.el          # Startup settings, theme, UI chrome, scratch buffer
+├── early-init.el          # Startup settings, UI chrome, scratch buffer
 ├── init.el                # Entry point: resolves paths, loads early-init + modules
 ├── lisp/                  # All configuration modules
 │   ├── init-core.el       # Package bootstrap + general Emacs settings
 │   ├── init-ui.el         # Doom modeline (text-based, no icons)
 │   ├── init-tools.el      # Magit, Projectile, TRAMP, ibuffer, etc.
 │   ├── init-completion.el # Corfu/Cape/Vertico/Consult/Embark
-│   ├── init-evil.el       # Evil, evil-collection, undo-fu/vundo stack
-│   ├── init-python.el     # Tree-sitter, python-ts-mode, REPL utilities
+│   ├── init-evil.el       # Evil, evil-collection, evil-commentary, evil-anzu, undo-fu/vundo stack
+│   ├── init-dirvish.el    # Dirvish (enhanced Dired), sidebar, evil bindings
+│   ├── init-python.el     # Tree-sitter, python-ts-mode, my-python-run, REPL
 │   ├── init-org.el        # Org mode, capture, babel, clocking
 │   └── init-daily-log.el  # Daily activity logging with calendar view
 ├── test/                  # Ad-hoc scripts, experiments (not loaded by Emacs)
@@ -52,16 +53,17 @@ Modules are loaded in this order by `init.el`. Each module depends only on modul
 2. **`init-ui`** — Depends on core. Doom modeline; picks up evil state automatically once evil loads later.
 3. **`init-tools`** — Depends on core. Standalone tools with no evil or completion dependency: Magit, Projectile, TRAMP, Anzu, aggressive-indent, indent-bars, ibuffer.
 4. **`init-completion`** — Depends on core. Minibuffer (Vertico/Consult/Embark/Orderless/Marginalia) and in-buffer (Corfu/Cape) completion. Evil integration is deferred with `with-eval-after-load 'evil`.
-5. **`init-evil`** — Depends on tools (for Anzu). Evil mode, evil-collection, evil-surround, undo-fu/vundo.
-6. **`init-python`** — Depends on core. Loads `python.el` up-front. Evil keybindings deferred. Tree-sitter grammars, `python-ts-mode` remap, `# %%` cell navigation, venv detection.
-7. **`init-org`** — Depends on core. Forces org to load via `(require 'org-clock)`. Capture templates, babel, org-download, clock summary dynamic blocks.
-8. **`init-daily-log`** — Depends on org. Daily activity logging with org-capture + calendar view for visualizing habits (workout, reading, medication, etc.).
+5. **`init-evil`** — Depends on tools (for Anzu). Evil mode, evil-collection, evil-surround, evil-commentary, evil-anzu, undo-fu/undo-fu-session/vundo. Custom `_`-as-word text objects.
+6. **`init-dirvish`** — Depends on evil. Dirvish sidebar with vim-style `j`/`k`/`h`/`l` navigation, collapse toggle, Evil normal state.
+7. **`init-python`** — Depends on core. Loads `python.el` up-front. Evil keybindings deferred. Tree-sitter grammars, `python-ts-mode` remap, `# %%` cell navigation, venv detection, `my-python-run` bound to `<f5>`.
+8. **`init-org`** — Depends on core. Forces org to load via `(require 'org-clock)`. Capture templates, babel, org-download, clock summary dynamic blocks.
+9. **`init-daily-log`** — Depends on org. Daily activity logging with org-capture + calendar/table views for visualizing habits (workout, reading, diet).
 
 A module can be disabled by commenting out its `require` in `init.el`.
 
 ## Daily log system
 
-Capture daily activities (workout, reading, medication, diet) into `~/org/daily-log.org` via org-capture, then visualize them in a color-coded month calendar.
+Capture daily activities (workout, reading, diet, etc.) into `~/org/daily-log.org` via org-capture, then visualize them in a color-coded month calendar.
 
 ### Capturing entries
 
@@ -75,8 +77,8 @@ Run `C-c c`, then choose `d` to capture an activity under today's date in a date
 ran 5k
 **** Reading
 30 minutes
-**** Medication
-10m at 1pm
+**** Diet
+salad + chicken
 ```
 
 Type optional details below the activity name. Multiline notes are fine, which
@@ -98,11 +100,13 @@ Activity: Workout        Range: last 31 days        Count: 8 / 31
    ...
 ```
 
-- Day numbers are color-coded when an activity occurred (red=Workout, blue=Reading, green=Medication, orange=Diet)
+- Day numbers are color-coded when an activity occurred (red=Workout, blue=Reading, orange=Diet)
 - Today is highlighted
 - **n** / **p** — navigate months
 - **+** / **-** — change summary range (30 → 60 → 90 → 180 → 365 days)
 - **g** — switch to a different activity
+- **t** — switch to table view
+- **RET** — open date's detail popup in a side window
 - **c** — run capture from the view
 - **q** — quit
 
@@ -114,8 +118,8 @@ snippet when the entry has body text. Empty activity headings still show the
 activity letter, and missing activities show `.`.
 
 ```
-Date            Workout        Reading        Medication     Diet
-2026-05-03 Sun  ran 5k         30 minutes     10m at 1pm     .
+Date            Workout        Reading        Diet
+2026-05-03 Sun  ran 5k         30 minutes     salad + chicken
 ```
 
 - **n** / **p** — scroll by 30 days
@@ -133,7 +137,9 @@ Edit `my/daily-log-activities` in `lisp/init-daily-log.el` to add or change acti
 ```elisp
 '(("Workout"    "W" my/daily-log-face-workout)
   ("Reading"    "R" my/daily-log-face-reading)
-  ...)
+  ("Diet"       "D" my/daily-log-face-diet)
+  ;; Add more as needed: ("Medication" "M" my/daily-log-face-medication)
+  )
 ```
 
 ## `early-init.el` and the startup sequence

@@ -128,47 +128,19 @@ Then open Dirvish side in the current frame and focus it."
     (evil-set-initial-state 'dirvish-mode 'normal)
     (evil-set-initial-state 'dirvish-side-mode 'normal)
 
-    ;; Regular Dirvish buffers.
+    ;; Only override defaults where dirvish differs from vim-style dired:
+    ;;   h → up-directory (dirvish defaults to history back)
+    ;;   l → open (dirvish defaults to history forward)
+    ;;   zM → custom collapse-all (not bound by default)
     (evil-define-key 'normal dirvish-mode-map
-      (kbd "j")   #'dired-next-line
-      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
-      (kbd "RET") #'dired-find-file
-      (kbd "TAB") #'dirvish-subtree-toggle
-      (kbd "zM")  #'my/dirvish-collapse-all
+      (kbd "zM")  #'my/dirvish-collapse-all)
 
-      (kbd "g r") #'revert-buffer
-
-      (kbd "m")   #'dired-mark
-      (kbd "u")   #'dired-unmark
-      (kbd "U")   #'dired-unmark-all-marks
-      (kbd "C")   #'dired-do-copy
-      (kbd "R")   #'dired-do-rename
-      (kbd "D")   #'dired-do-delete
-      (kbd "+")   #'dired-create-directory
-      (kbd "q")   #'quit-window)
-
-    ;; Dirvish sidebar buffers.
     (evil-define-key 'normal dirvish-side-mode-map
-      (kbd "j")   #'dired-next-line
-      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
-      (kbd "RET") #'dired-find-file
-      (kbd "TAB") #'dirvish-subtree-toggle
-      (kbd "zM")  #'my/dirvish-collapse-all
-
-      (kbd "g r") #'revert-buffer
-
-      (kbd "m")   #'dired-mark
-      (kbd "u")   #'dired-unmark
-      (kbd "U")   #'dired-unmark-all-marks
-      (kbd "C")   #'dired-do-copy
-      (kbd "R")   #'dired-do-rename
-      (kbd "D")   #'dired-do-delete
-      (kbd "+")   #'dired-create-directory
-      (kbd "q")   #'quit-window)))
+      (kbd "zM")  #'my/dirvish-collapse-all)))
 
 (global-set-key (kbd "C-c d") #'my/dirvish-side)
 

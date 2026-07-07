@@ -65,10 +65,14 @@
   (save-buffer)
   (let* ((py (my/python-find-runner))
          (fname (file-name-nondirectory (buffer-file-name)))
+         (buf-name (format "*python-run %s*" fname))
          (command (format "%s -u %s"
                           (shell-quote-argument py)
                           (shell-quote-argument (buffer-file-name)))))
-    (async-shell-command command (format "*python-run %s*" fname))))
+    (async-shell-command command buf-name)
+    (with-current-buffer (get-buffer buf-name)
+      (when (bound-and-true-p evil-mode)
+        (evil-normal-state)))))
 
 ;;; Python mode configuration
 (use-package python
