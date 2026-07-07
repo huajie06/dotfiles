@@ -1,7 +1,8 @@
 # Dirvish + consult-dir cheatsheet
 
-Bindings come from `evil-collection` + dirvish defaults. Only `h`/`l` override
-dirvish's history-forward/back to behave like vim (up/open).
+Vim-style navigation (j/k/h/l) with minimal overrides. Default Dired keys
+(C, R, D, m, u, U, +, RET, q, `^`) still work. Only evil-shadowed keys are
+bound here: j/k, h/l, w, y, ?, zM.
 
 ## Global keybindings
 
@@ -22,13 +23,12 @@ dirvish's history-forward/back to behave like vim (up/open).
 | `h` | Go up a directory |
 | `l` | Open file / enter directory |
 | `RET` | Open file / enter directory |
-| `TAB` | Preview file inline |
-| `gr` | Refresh |
 | `~` | Jump to home |
 | `.` | Toggle hidden files |
 | `s` | Sort (name/date/size) |
 | `z` | Extract — preview in side window |
 | `zM` | Collapse all expanded subtrees |
+| `?` | Dirvish dispatch menu (file info, marks, rename, etc.) |
 
 ### File operations
 
@@ -37,6 +37,7 @@ dirvish's history-forward/back to behave like vim (up/open).
 | `m` | Mark file |
 | `u` | Unmark file |
 | `U` | Unmark all |
+| `w` / `y` | Copy filename to kill ring |
 | `C` | Copy marked/current file |
 | `R` | Rename marked/current file |
 | `D` | Delete marked/current file |

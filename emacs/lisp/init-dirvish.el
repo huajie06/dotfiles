@@ -124,22 +124,27 @@ Then open Dirvish side in the current frame and focus it."
     (setq dired-listing-switches "-alh --group-directories-first --sort=name"))
 
   (with-eval-after-load 'evil
-    ;; Start Dirvish in Evil normal state.
     (evil-set-initial-state 'dirvish-mode 'normal)
     (evil-set-initial-state 'dirvish-side-mode 'normal)
 
-    ;; Only override defaults where dirvish differs from vim-style dired:
-    ;;   h → up-directory (dirvish defaults to history back)
-    ;;   l → open (dirvish defaults to history forward)
-    ;;   zM → custom collapse-all (not bound by default)
     (evil-define-key 'normal dirvish-mode-map
+      (kbd "j")   #'dired-next-line
+      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
+      (kbd "w")   #'dired-copy-filename-as-kill
+      (kbd "y")   #'dired-copy-filename-as-kill
+      (kbd "?")   #'dirvish-dispatch
       (kbd "zM")  #'my/dirvish-collapse-all)
 
     (evil-define-key 'normal dirvish-side-mode-map
+      (kbd "j")   #'dired-next-line
+      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
+      (kbd "w")   #'dired-copy-filename-as-kill
+      (kbd "y")   #'dired-copy-filename-as-kill
+      (kbd "?")   #'dirvish-dispatch
       (kbd "zM")  #'my/dirvish-collapse-all)))
 
 (global-set-key (kbd "C-c d") #'my/dirvish-side)
