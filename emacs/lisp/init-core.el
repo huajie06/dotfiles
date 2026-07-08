@@ -70,6 +70,11 @@
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
 
+;;; which-key
+(use-package which-key
+  :init
+  (which-key-mode))
+
 ;;; Search enhancements (built-in isearch config)
 (use-package isearch
   :ensure nil
