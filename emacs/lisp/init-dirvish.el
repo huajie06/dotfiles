@@ -111,6 +111,40 @@ Then open Dirvish side in the current frame and focus it."
       (goto-char start-pos)
       (set-marker start-pos nil)))
 
+  (defun my/dirvish--split-and-open (split-fn)
+    "Open file at point in a split, handling the Emacs side-window constraint.
+SPLIT-FN is a function like `split-window-right' or `split-window-below'.
+In side mode, the side window is temporarily removed to allow splitting,
+then restored after opening the file."
+    (let* ((file (dired-get-filename nil t)))
+      (unless file (user-error "No file at point"))
+      (if (file-directory-p file)
+          (dired-find-file)
+        (if-let* ((side-win (my/dirvish-side-window))
+                  (side-dir (with-current-buffer (window-buffer side-win)
+                              default-directory)))
+            (progn
+              (delete-window side-win)
+              (let ((new-win (funcall split-fn)))
+                (select-window new-win)
+                (find-file file))
+              (dirvish-side side-dir)
+              (when-let ((file-win (get-buffer-window (find-file-noselect file) t)))
+                (select-window file-win)))
+          (let ((new-win (funcall split-fn)))
+            (select-window new-win)
+            (find-file file))))))
+
+  (defun my/dirvish-find-file-vertical ()
+    "Open file at point in a vertical split (file on the right)."
+    (interactive)
+    (my/dirvish--split-and-open #'split-window-right))
+
+  (defun my/dirvish-find-file-horizontal ()
+    "Open file at point in a horizontal split (file below)."
+    (interactive)
+    (my/dirvish--split-and-open #'split-window-below))
+
   :config
   (add-hook 'dirvish-setup-hook
             #'my/dirvish-disable-line-numbers)
@@ -120,8 +154,8 @@ Then open Dirvish side in the current frame and focus it."
            (executable-find "gls"))
       (progn
         (setq insert-directory-program "gls")
-        (setq dired-listing-switches "-alh --group-directories-first --sort=name"))
-    (setq dired-listing-switches "-alh --group-directories-first --sort=name"))
+        (setq dired-listing-switches "-Alh --group-directories-first --sort=name"))
+    (setq dired-listing-switches "-Alh --group-directories-first --sort=name"))
 
   (with-eval-after-load 'evil
     (evil-set-initial-state 'dirvish-mode 'normal)
@@ -135,7 +169,9 @@ Then open Dirvish side in the current frame and focus it."
       (kbd "<tab>") #'dirvish-subtree-toggle
       (kbd "?")   #'dirvish-dispatch
       (kbd "zm")  #'my/dirvish-collapse-all
-      (kbd "zM")  #'my/dirvish-collapse-all)
+      (kbd "zM")  #'my/dirvish-collapse-all
+      (kbd "gv")  #'my/dirvish-find-file-vertical
+      (kbd "gs")  #'my/dirvish-find-file-horizontal)
 
     (evil-define-key 'normal dirvish-side-mode-map
       (kbd "h")   #'dired-up-directory
@@ -145,7 +181,9 @@ Then open Dirvish side in the current frame and focus it."
       (kbd "<tab>") #'dirvish-subtree-toggle
       (kbd "?")   #'dirvish-dispatch
       (kbd "zm")  #'my/dirvish-collapse-all
-      (kbd "zM")  #'my/dirvish-collapse-all)))
+      (kbd "zM")  #'my/dirvish-collapse-all
+      (kbd "gv")  #'my/dirvish-find-file-vertical
+      (kbd "gs")  #'my/dirvish-find-file-horizontal)))
 
 (global-set-key (kbd "C-c d") #'my/dirvish-side)
 
