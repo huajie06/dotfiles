@@ -128,23 +128,23 @@ Then open Dirvish side in the current frame and focus it."
     (evil-set-initial-state 'dirvish-side-mode 'normal)
 
     (evil-define-key 'normal dirvish-mode-map
-      (kbd "j")   #'dired-next-line
-      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
       (kbd "w")   #'dired-copy-filename-as-kill
       (kbd "y")   #'dired-copy-filename-as-kill
+      (kbd "<tab>") #'dirvish-subtree-toggle
       (kbd "?")   #'dirvish-dispatch
+      (kbd "zm")  #'my/dirvish-collapse-all
       (kbd "zM")  #'my/dirvish-collapse-all)
 
     (evil-define-key 'normal dirvish-side-mode-map
-      (kbd "j")   #'dired-next-line
-      (kbd "k")   #'dired-previous-line
       (kbd "h")   #'dired-up-directory
       (kbd "l")   #'dired-find-file
       (kbd "w")   #'dired-copy-filename-as-kill
       (kbd "y")   #'dired-copy-filename-as-kill
+      (kbd "<tab>") #'dirvish-subtree-toggle
       (kbd "?")   #'dirvish-dispatch
+      (kbd "zm")  #'my/dirvish-collapse-all
       (kbd "zM")  #'my/dirvish-collapse-all)))
 
 (global-set-key (kbd "C-c d") #'my/dirvish-side)

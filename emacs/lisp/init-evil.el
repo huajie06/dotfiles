@@ -44,7 +44,7 @@
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init '(magit wdired ibuffer)))
+  (evil-collection-init '(magit wdired ibuffer dired)))
 
 (use-package evil-surround
   :config
