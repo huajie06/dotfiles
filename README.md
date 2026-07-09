@@ -7,7 +7,9 @@ Personal config files.
 | [emacs/](emacs/) | Modular Evil-based config for Python data science and Org mode |
 | [nvim/](nvim/) | Neovim config |
 | [fish/](fish/) | Fish shell config |
+| [zsh/](zsh/) | Zsh prompt config |
 | [ghostty/](ghostty/) | Ghostty terminal config |
+| [terminal/](terminal/) | macOS Terminal profile setup |
 | [wezterm/](wezterm/) | WezTerm terminal config |
 | [vscode/](vscode/) | VSCode `settings.json` backup |
 
