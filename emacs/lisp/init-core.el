@@ -54,6 +54,7 @@
   (auto-save-visited-mode 1)
   (global-hl-line-mode -1)
   (show-paren-mode t)
+  (menu-bar-mode -1)
   (global-eldoc-mode -1)
   (electric-pair-mode 1)
   (electric-indent-mode 1)
