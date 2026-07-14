@@ -15,7 +15,10 @@
   (doom-modeline-indent-info nil)
   (doom-modeline-project-detection 'auto)
   (doom-modeline-workspace-name t)
-  (doom-modeline-env-version nil))
+  (doom-modeline-env-version nil)
+  (doom-modeline-position-line-format nil)
+  (doom-modeline-position-column-format '("C%c"))
+  (doom-modeline-position-column-line-format '("C%c")))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here
