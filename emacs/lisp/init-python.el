@@ -91,6 +91,7 @@
 
   (add-hook 'python-base-mode-hook
             (lambda ()
+              (modify-syntax-entry ?_ "w")
               (add-hook 'before-save-hook #'my/ruff-format nil 'make-local)))
   (electric-indent-local-mode 1))
 
