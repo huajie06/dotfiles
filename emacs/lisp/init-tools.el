@@ -52,6 +52,16 @@
   (set-face-attribute 'anzu-mode-line nil
                       :foreground "purple" :weight 'bold))
 
+;;; hl-todo — highlight TODO-like keywords in comments
+;; Default keywords: HOLD TODO NEXT THEM PROG OKAY DONT FAIL DONE
+;;                    NOTE MAYBE KLUDGE HACK TEMP WIP FIXME DEBUG XXXX*
+(use-package hl-todo
+  :config
+  (setq hl-todo-keyword-faces
+        (append '(("FIXED" . "#4caf50"))
+                hl-todo-keyword-faces))
+  :hook ((python-base-mode) . hl-todo-mode))
+
 ;;; Aggressive indent — keep code correctly indented
 (use-package aggressive-indent
   :config
