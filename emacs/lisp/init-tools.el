@@ -60,7 +60,7 @@
   (setq hl-todo-keyword-faces
         (append '(("FIXED" . "#4caf50"))
                 hl-todo-keyword-faces))
-  :hook ((python-base-mode) . hl-todo-mode))
+  :hook ((prog-mode) . hl-todo-mode))
 
 ;;; Aggressive indent — keep code correctly indented
 (use-package aggressive-indent

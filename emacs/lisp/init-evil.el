@@ -74,5 +74,12 @@
 (define-key evil-inner-text-objects-map "w" 'my/evil-inner-word)
 (define-key evil-outer-text-objects-map "w" 'my/evil-a-word)
 
+;;; Visual feedback for evil operations
+(use-package evil-goggles
+  :config
+  (setq evil-goggles-duration 0.1)
+  (setq evil-goggles-use-diff-face t)
+  (evil-goggles-mode))
+
 (provide 'init-evil)
 ;;; init-evil.el ends here

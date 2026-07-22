@@ -39,11 +39,20 @@
   ;; Fill column indicator
   (setq-default fill-column 80)
   (setq display-fill-column-indicator-column 80)
+  (setq-default visual-wrap-extra-indent 2)
 
   :config
-  ;; Keep the default font family, but use a larger size.
-  (when (eq system-type 'darwin)
-    (set-face-attribute 'default nil :height 200))
+  ;; Font: Fira Code 11pt, with system default fallback.
+  ;; Symbol font: Symbols Nerd Font Mono, with fallback.
+  (when (display-graphic-p)
+    (let ((fira-family "Fira Code")
+          (symbol-family "Symbols Nerd Font Mono")
+          (size 110))
+      (if (find-font (font-spec :family fira-family))
+          (set-face-attribute 'default nil :family fira-family :height size)
+        (set-face-attribute 'default nil :height size))
+      (when (find-font (font-spec :family symbol-family))
+        (set-fontset-font t 'symbol (font-spec :family symbol-family)))))
 
   ;; GUI Emacs on Linux may not inherit the interactive shell PATH.
   (let ((local-bin (expand-file-name "~/.local/bin")))
@@ -58,6 +67,7 @@
   (global-eldoc-mode -1)
   (electric-pair-mode 1)
   (electric-indent-mode 1)
+  (visual-wrap-prefix-mode 1)
   ;; (setq display-line-numbers-type 'relative
   ;;       display-line-numbers-width 4
   ;;       display-line-numbers-grow-only t)
@@ -68,8 +78,12 @@
   (global-set-key (kbd "<f12>") 'toggle-truncate-lines)
 
   ;; Hooks
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode))
+
+;;; ws-butler — smart trailing whitespace (only touches edited lines)
+(use-package ws-butler
+  :config
+  (ws-butler-global-mode))
 
 ;;; which-key
 (use-package which-key

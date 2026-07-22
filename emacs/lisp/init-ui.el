@@ -1,5 +1,14 @@
 ;;; init-ui.el --- Modeline and UI polish
 
+;; Theme
+(load-theme 'modus-operandi-deuteranopia t)
+
+;; Doom theme utilities (bold/italic enhancement, no doom theme loaded)
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t))
+
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
   :custom
