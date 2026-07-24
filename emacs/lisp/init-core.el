@@ -39,7 +39,6 @@
   ;; Fill column indicator
   (setq-default fill-column 80)
   (setq display-fill-column-indicator-column 80)
-  (setq-default visual-wrap-extra-indent 2)
 
   :config
   ;; Font: Fira Code 11pt, with system default fallback.
@@ -67,7 +66,6 @@
   (global-eldoc-mode -1)
   (electric-pair-mode 1)
   (electric-indent-mode 1)
-  (visual-wrap-prefix-mode 1)
   ;; (setq display-line-numbers-type 'relative
   ;;       display-line-numbers-width 4
   ;;       display-line-numbers-grow-only t)

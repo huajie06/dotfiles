@@ -39,9 +39,41 @@
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
 ;;; Markdown
+(defun my/markdown-format ()
+  "Format the current buffer with prettier.
+Formats in a temp buffer first, then copies back only on success."
+  (interactive)
+  (when-let ((prettier (executable-find "prettier")))
+    (let ((orig (current-buffer))
+          (start (point-min))
+          (end (point-max)))
+      (with-temp-buffer
+        (insert-buffer-substring orig start end)
+        (let ((exit (call-process-region (point-min) (point-max) prettier t t nil
+                                         "--parser" "markdown")))
+          (if (zerop exit)
+              (let ((temp (current-buffer)))
+                (with-current-buffer orig
+                  (replace-buffer-contents temp)))
+            (error "prettier markdown format failed with exit code %d" exit)))))))
+
+(defun my/markdown-setup-format-on-save ()
+  "Format Markdown buffers with prettier before saving."
+  (add-hook 'before-save-hook #'my/markdown-format nil 'make-local))
+
+(defun my/markdown-setup-visual-wrap ()
+  "Wrap Markdown visually at word boundaries with an indented continuation."
+  (require 'visual-wrap)
+  (setq-local word-wrap t)
+  (setq-local visual-wrap-extra-indent 2)
+  (visual-wrap-prefix-mode 1)
+  (visual-line-mode 1))
+
 (use-package markdown-mode
-  :mode ("README\\.md\\'" . gfm-mode)
+  :mode ("\\.md\\'" . gfm-mode)
   :init (setq markdown-command "multimarkdown")
+  :hook (((markdown-mode gfm-mode) . my/markdown-setup-format-on-save)
+         ((markdown-mode gfm-mode) . my/markdown-setup-visual-wrap))
   :bind (:map markdown-mode-map
               ("C-c C-e" . markdown-do)))
 
