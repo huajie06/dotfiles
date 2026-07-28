@@ -2,6 +2,12 @@
 
 (require 'python)
 
+(declare-function cape-keyword "cape")
+(declare-function cape-dabbrev "cape")
+(declare-function cape-file "cape")
+(declare-function evil-normal-state "evil-states")
+(declare-function projectile-project-root "projectile")
+
 ;;; Tree-sitter grammar sources
 (use-package treesit
   :ensure nil
@@ -57,6 +63,14 @@
       (executable-find "python")
       "python3"))
 
+(defun my/python-run-display-buffer (buffer)
+  "Display BUFFER in a bottom window using one third of the frame."
+  (display-buffer
+   buffer
+   '((display-buffer-reuse-window display-buffer-in-side-window)
+     (side . bottom)
+     (window-height . 0.33))))
+
 (defun my-python-run ()
   "Save and run the current Python file with unbuffered output."
   (interactive)
@@ -70,9 +84,13 @@
                           (shell-quote-argument py)
                           (shell-quote-argument (buffer-file-name)))))
     (async-shell-command command buf-name)
-    (with-current-buffer (get-buffer buf-name)
-      (when (bound-and-true-p evil-mode)
-        (evil-normal-state)))))
+    (when-let* ((buf (get-buffer buf-name))
+                (window (my/python-run-display-buffer buf)))
+      (with-current-buffer buf
+        (goto-char (point-max))
+        (set-window-point window (point))
+        (when (bound-and-true-p evil-mode)
+          (evil-normal-state))))))
 
 ;;; Python mode configuration
 (use-package python
@@ -216,6 +234,14 @@ Formats in a temp buffer first, then copies back only on success."
          (version (shell-command-to-string (format "%s --version" interp))))
     (message "%s" (string-trim version))))
 
+(defun my/python-define-evil-keys ()
+  "Define Python Evil keybindings after Evil is loaded."
+  (eval
+   '(evil-define-key 'normal python-base-mode-map
+      (kbd "<leader>l") 'my/python-send-current-line
+      (kbd "<leader>b") 'my/python-send-cell
+      (kbd "<leader>a") 'my/python-send-buffer)))
+
 ;;; Keybindings
 
 (with-eval-after-load 'python
@@ -226,10 +252,7 @@ Formats in a temp buffer first, then copies back only on success."
 
 (with-eval-after-load 'evil
   (with-eval-after-load 'python
-    (evil-define-key 'normal python-base-mode-map
-      (kbd "<leader>l") 'my/python-send-current-line
-      (kbd "<leader>b") 'my/python-send-cell
-      (kbd "<leader>a") 'my/python-send-buffer)))
+    (my/python-define-evil-keys)))
 
 (provide 'init-python)
 ;;; init-python.el ends here
