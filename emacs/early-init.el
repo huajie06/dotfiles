@@ -8,9 +8,6 @@
 (add-hook 'emacs-startup-hook
           (lambda () (switch-to-buffer "*scratch*")))
 
-;; Frame geometry — set before the first frame is created
-(add-to-list 'default-frame-alist '(width . 95))
-
 ;; UI chrome — disable before GUI paints to avoid flicker
 (menu-bar-mode 1)
 (tool-bar-mode -1)

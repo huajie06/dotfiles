@@ -153,6 +153,7 @@ Edit `my/daily-log-activities` in `lisp/init-daily-log.el` to add or change acti
 ## Design conventions
 
 - **No `custom-file`**: all settings are explicit `setq` inside `use-package` blocks. Nothing writes to `custom-set-variables`.
+- **GUI frame size** is restored from `~/.emacs.d/frame-geometry.el`. Run `M-x my/save-frame-geometry` after resizing the frame to update it. Frame position is intentionally left to the window manager: KDE Wayland ignores application positioning requests, so use a KWin Window Rule if fixed placement is needed.
 - **`:custom` for defcustoms, `:bind` for keys, `:config` for everything else** — keeps intent clear.
 - **Evil keybindings** use nested `with-eval-after-load 'evil ... with-eval-after-load '<package>` so neither load order nor deferred loading breaks them.
 - **Python mode** remapped via `major-mode-remap-alist` (`python-mode` → `python-ts-mode`), not by patching `auto-mode-alist`.
