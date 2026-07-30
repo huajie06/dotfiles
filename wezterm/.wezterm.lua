@@ -77,6 +77,7 @@ return {
   default_prog = { 'fish' },
   enable_kitty_graphics = true,
   enable_wayland = false,
+  notification_handling = 'NeverShow',
 
   mouse_bindings = {
     {
