@@ -103,7 +103,10 @@
   ;; Remap python-mode to python-ts-mode
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
   :bind (:map python-base-mode-map
-              ("<f5>" . my-python-run))
+              ("<f5>" . my-python-run)
+              ("C-c e" . flymake-show-buffer-diagnostics)
+              ("M-n" . flymake-goto-next-error)
+              ("M-p" . flymake-goto-prev-error))
   :config
   (add-hook 'python-base-mode-hook #'my/python-setup-completion)
 
